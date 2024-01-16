@@ -1,0 +1,27 @@
+{
+  "user": [
+    {
+      "id": "1",
+      "username": "abi",
+      "passcode": "abis0113"
+    },
+    {
+      "id": 1,
+      "username": "abishek",
+      "email": "abish@gmail.com",
+      "passcode": "abis0113"
+    },
+    {
+      "id": 2,
+      "username": "abishek",
+      "email": "asd@gmail.com",
+      "passcode": "king2003"
+    },
+    {
+      "id": 3,
+      "username": "abishek",
+      "email": "ggg@gmail.com",
+      "passcode": "king2003"
+    }
+  ]
+}

@@ -11,7 +11,11 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
-
+.App{
+  display: flex;
+  height: 100vh;
+  width: 100%;
+}
 .firstpage{
   background-color: #F8F4EC;
   display: flex;
@@ -59,7 +63,7 @@ code {
   display: flex;
   flex-direction: column;
 }
-.con .signupsection li{
+.con .signupsection li, .signup{
   align-self: center;
   display: flex;
   justify-content: center;
@@ -75,9 +79,9 @@ code {
   padding: 10px;
   font-size: 20px;
 }
+
 .con .signupsection .google{
   width: 80%;
-
 }
 
 .con .login{
@@ -86,7 +90,7 @@ code {
   flex-direction: column;
   margin-top: 30px;
 }
-.con .login li{
+.con .login .loginbtn{
   align-self: center;
   text-align: center;
   width: 60%;
@@ -102,7 +106,50 @@ code {
   font-size: 20px;
 }
 
-@media  (max-width: 500px) {
+.loginpage , .signuppage{
+  background-color: #F8F4EC;
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.loginpage .loginpanel,.signuppanel{
+  background-color: #ffc06140;
+  width: 30%;
+  height: auto;
+  border-radius: 20px;
+  text-align: center;
+}
+.loginpage .loginpanel form,.signuppanel form{
+  display: flex;
+  flex-direction: column;
+  padding: 30px;
+}
+.loginpage .loginpanel form input ,.signuppanel form input{
+  margin-bottom: 30px;
+  width: 80%;
+  border: 1px solid #f99806;
+  border-radius: 20px;
+  text-align: center;
+  padding: 10px;
+  align-self: center;
+  background-color: transparent;
+}
+.loginpage .loginpanel form button,.signuppanel form button{
+  margin-bottom: 30px;
+  border: 1px solid #f99806;
+  border-radius: 20px;
+  text-align: center;
+  width: 50%;
+  padding: 10px;
+  align-self: center;
+  background-color: #FFC061;
+}
+
+
+@media  (max-width: 600px) {
   .firstpage{
     background-color: #F8F4EC;
     display: flex;
@@ -136,5 +183,8 @@ code {
     flex-direction: column;
     font-size: 18px;
     color: #3A2104;
+  }
+  .loginpage .loginpanel,.signuppanel{
+    width: 80%;
   }
 }
