@@ -4,27 +4,32 @@ import Login from "./pages/Login";
 import Dash from "./pages/Dash";
 import { useEffect, useState } from "react";
 import Createacc from "./pages/Createacc";
-
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { fab } from '@fortawesome/free-brands-svg-icons'
+import { fas } from '@fortawesome/free-solid-svg-icons'
+import { far } from '@fortawesome/free-regular-svg-icons'
 
 function App() {
   const [auth, setauth]=useState(false)
   const [user, setuser]=useState([])
   const url='http://localhost:5000/user'
   useEffect(()=>{
+    console.log(auth)
     const fetch_data=async ()=>{
       try {
         const res=await fetch(url)
         if(!res.ok) throw Error("error")
         const users= await res.json()
+        setauth(users[1].Auth)
         setuser(users)
       } catch (error) {
         
       }  
     }
-      fetch_data()},[user])
+      fetch_data()},[auth,user])
   
     useEffect(()=>{
-  },[auth,user])
+  },[user])
   return (
     <div className="App">
       <Routes>
@@ -44,3 +49,4 @@ function App() {
 }
 
 export default App;
+library.add(fab, fas, far)
