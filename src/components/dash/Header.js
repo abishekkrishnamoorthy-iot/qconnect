@@ -1,6 +1,7 @@
 import React from 'react'
 import Nav from './Nav'
 import Search from './Search'
+import Profile from './Profile'
 
 const Header = () => {
   return (
@@ -10,6 +11,7 @@ const Header = () => {
       </div>
       <Nav/>
       <Search/>
+      <Profile/>
     </div>
   )
 }

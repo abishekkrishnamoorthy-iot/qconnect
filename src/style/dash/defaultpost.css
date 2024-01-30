@@ -1,0 +1,78 @@
+.defaultpost{
+
+    display: flex;
+    flex-direction: column;
+    justify-content: left;
+    height: 15vh;
+    background-color:whitesmoke;
+    margin-top: 10px;
+    border-radius: 10px;
+}
+.defaultpost .userprofile{
+    margin-top: 10px;
+    margin-left: 5px;
+    width: 60%;
+    display: flex;
+    flex-direction: row;
+    text-align: center;
+    background-color: transparent;
+}
+
+.userprofile .userdetials{
+    width: 60%;
+    height: 40px;
+    margin-left: 5px;
+    padding: 0;
+    text-align: left;
+    line-height: 0.1px;
+}
+.userprofile .userdetials h5{
+    margin-top: 5px;
+}
+ .userprofile .userdetials h6{
+ font-weight: 100;
+
+}
+ .userprofile .img{
+    width: 40px;
+    height:40px;
+    border-radius: 100%;
+    border: 2px solid rgb(59, 58, 58);
+    background-color: transparent;
+    display: flex;
+    justify-content: center;
+}
+.userprofile .user{
+    align-self: center;
+}
+.question form{
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.question input{
+    width: 60%;
+    margin-left: 40px;
+    border: none;
+    border-radius: 20px;
+    padding: 10px;
+    background-color: #F8F4EC;
+}
+
+
+.question   button{
+    align-self: center;
+    margin-left: 10%;
+    width: 10%;
+    padding: 5px;
+    border: 2px solid #FFC061;
+    border-radius: 20px;
+    background-color: transparent;
+
+}
+.question button:hover{
+border: 2px solid #FFC061;
+background-color:#f99806;
+}
