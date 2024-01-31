@@ -9,8 +9,7 @@
       "id": "1",
       "username": "abishek",
       "email": "abish@gmail.com",
-      "passcode": "abis0113",
-      "Auth": true
+      "passcode": "abis0113"
     },
     {
       "id": "2",
@@ -29,6 +28,30 @@
       "username": "abishek",
       "email": "abis@gmail.com",
       "passcode": "abis0113"
+    },
+    {
+      "id": "311",
+      "username": "abishek",
+      "email": "abi@gmail.com",
+      "passcode": "abis0113"
+    },
+    {
+      "id": "3111",
+      "username": "raj",
+      "email": "raj@gmail.com",
+      "passcode": "raj0113"
+    },
+    {
+      "id": "31111",
+      "username": "mathan",
+      "email": "mathan@gmail.com",
+      "passcode": "mathan"
+    },
+    {
+      "id": 1,
+      "username": "subashdon",
+      "email": "subashhello@gmail.com",
+      "passcode": "abishek"
     }
   ]
 }

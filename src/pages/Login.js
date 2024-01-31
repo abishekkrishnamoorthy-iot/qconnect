@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 
 const Login = ({auth,setauth,user,setuser,curuser,setcuruser}) => {
     const url="http://localhost:5000/user"
+    const [username,setusername]=useState('')
      const [passcode, setpasscode]=useState("")
      const navigate=useNavigate()
       const handlelogin= async(e)=>{

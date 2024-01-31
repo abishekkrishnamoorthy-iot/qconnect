@@ -12,7 +12,6 @@ import { far } from '@fortawesome/free-regular-svg-icons'
 function App() {
   const [auth, setauth]=useState(false)
   const [user, setuser]=useState([])
-  const [curuser,setcuruser]=useState([])
   const url='http://localhost:5000/user'
   useEffect(()=>{
     console.log(auth)
@@ -21,7 +20,7 @@ function App() {
         const res=await fetch(url)
         if(!res.ok) throw Error("error")
         const users= await res.json()
-        setauth(users[1].Auth)
+        setauth(true)
         setuser(users)
       } catch (error) {
         
@@ -38,16 +37,15 @@ function App() {
                                              setauth={setauth}
                                              user={user}
                                              setuser={setuser}
-                                             curuser={curuser}
-                                             setcuruser={setcuruser}/>}/>
+                                            />}/>
         <Route path="/signup" element={<Createacc user={user}
                                                   setuser={setuser}/>}/>
         
         <Route path="/dash" element={auth?<Dash/>:<Login auth={auth}
                                                          etauth={setauth}
-                                                         curuser={curuser}
-                                                         setcuruser={setcuruser}/>}/>
+                                              />}/>
       </Routes>
+      
     </div>
   );
 }
