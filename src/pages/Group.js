@@ -1,19 +1,19 @@
 import React from 'react'
 import Header from '../components/common/Header'
 import Grouppanel from '../components/dash/Grouppanel'
-import Groups from '../components/dash/Groups'
-import Post from '../components/dash/Post'
 import Postpage from '../components/dash/Postpage'
-const Dash = () => {
+import '../style/group/grouppage.css'
+import Grpmain from '../components/grouppage/Grpmain'
+const Group = () => {
   return (
-    <div className='dash'>
+    <div className='grpdash'>
       <Header/>
-      <div className='dashcon'>
-      <Grouppanel/>
-      <Postpage/>
+      <div className='grpdashcon'>
+       <Grpmain/>
       </div>
     </div>
+    
   )
 }
 
-export default Dash
+export default Group

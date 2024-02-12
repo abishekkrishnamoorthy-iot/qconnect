@@ -1,0 +1,176 @@
+.grpdash{
+    background-color: #F8F4EC;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .grpdash .headerdash{
+    color: #eabb14;
+    background-color: #F9F0DB;
+    width: 100%;
+    height: 10vh;
+    display: flex;
+    flex-direction: row;
+    box-shadow: 2px 5px 4px #80808067;
+  }
+  .grpdash .headerdash .logo{
+    margin-left: 5%;
+    width: 15%;
+    display: flex;
+    justify-content: center;
+  }
+  .grpdash .headerdash .nav{
+    width: 35%;
+    display: flex;
+    flex-direction: row;
+  
+  }
+  .grpdash .headerdash .nav ul{
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content:center;
+    text-decoration: none;
+    
+  }
+  .grpdash .headerdash .nav ul li{
+    width: 20%;
+    margin-right: 5%;
+    padding-bottom:11.5%;
+    display: flex;
+    justify-content: center;
+    text-decoration: none; 
+    list-style-type: none;
+    cursor: pointer;  
+  }
+  .grpdash .headerdash .search{
+    margin-left: 3%;
+    width: 30%;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+  }
+  .icon{
+    color: #463804;
+  }
+  .grpdash .headerdash .nav ul  .icon:hover{
+    color: #f99806;
+    border-bottom: 5px solid #f99806;
+  }
+  .grpdash .headerdash .search  form{
+    width: 100%;
+    align-self: center;
+  }
+  .grpdash .headerdash .search form input{
+    width: 50%;
+    padding: 8px;
+    align-items: center;
+    border-radius: 10px;
+    border: none;
+  }
+  .grpdash .headerdash .search form input:hover{
+    border: 2px solid #f99806;
+  }
+  .grpdash .headerdash .profile{
+    display: flex;
+    flex-direction: row;
+    width: 20%;
+    align-items: center;
+  }
+  .grpdash .headerdash .profile .proimg{
+    display: flex;
+    flex-direction: row;
+    width: 25%;
+    height: 8vh;
+    border: 2px solid #070706;
+    border-radius: 20%;
+    justify-content: center;
+    align-items: center;
+    color: #463804;
+  }
+  .grpdash .grpdashcon{
+    display: flex;
+    flex-direction: row;
+    height: 90vh;
+    overflow-y: hidden;
+  }
+
+  .grpdash .grpdashcon .grpbox{
+    display: flex;
+    flex-direction: column;
+    width: 50%;
+    height: auto;
+    padding-bottom: 2px;
+    background-color: #a7a39b35;
+    margin-right:auto ;
+    margin-left: auto;
+    overflow-y:scroll ;
+  }
+
+
+  .grp{
+    display: flex;
+    flex-direction: column;
+    justify-content: left;
+    height: 10vh;
+    background-color:whitesmoke;
+    margin-top: 10px;
+    border-radius: 10px;
+}
+.grp .userprofile{
+    margin-top: 10px;
+    margin-left: 5px;
+    width: 60%;
+    display: flex;
+    flex-direction: row;
+    text-align: center;
+    background-color: transparent;
+}
+.grp .userprofile .userdetials{
+    width: 60%;
+    height: 40px;
+    margin-left: 5px;
+    padding: 0;
+    text-align: left;
+    line-height: 0.1px;
+}
+.grp .userprofile .userdetials h5{
+    margin-top: 5px;
+}
+.grp .userprofile .userdetials h6{
+ font-weight: 100;
+
+}
+.grp .userprofile .img{
+    width: 40px;
+    height:40px;
+    border-radius: 100%;
+    border: 2px solid rgb(59, 58, 58);
+    background-color: transparent;
+    display: flex;
+    justify-content: center;
+}
+.grp .userprofile .user{
+    align-self: center;
+}
+.grp .userprofile .followbtn{
+    align-self: center;
+    margin-left: 10%;
+    width: 30%;
+}
+.grp .userprofile .followbtn button{
+    align-self: center;
+    margin-left: 20%;
+    width: 90%;
+    padding: 3%;
+    border: 2px solid #FFC061;
+    border-radius: 20px;
+    background-color: transparent;
+
+}
+.grp .userprofile .followbtn button:hover{
+    border: 2px solid #FFC061;
+    background-color:#f99806;
+}

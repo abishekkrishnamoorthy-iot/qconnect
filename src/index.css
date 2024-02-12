@@ -157,7 +157,7 @@ code {
   flex-direction: column;
 }
 
-.dash .headerdash{
+ .headerdash{
   color: #463804;
   background-color: #F9F0DB;
   width: 100%;
@@ -166,19 +166,19 @@ code {
   flex-direction: row;
   box-shadow: 2px 5px 4px #80808067;
 }
-.dash .headerdash .logo{
+ .headerdash .logo{
   margin-left: 5%;
   width: 15%;
   display: flex;
   justify-content: center;
 }
-.dash .headerdash .nav{
+ .headerdash .nav{
   width: 35%;
   display: flex;
   flex-direction: row;
 
 }
-.dash .headerdash .nav ul{
+ .headerdash .nav ul{
   width: 100%;
   display: flex;
   flex-direction: row;
@@ -186,7 +186,7 @@ code {
   text-decoration: none;
   
 }
-.dash .headerdash .nav ul li{
+ .headerdash .nav ul .icon{
   width: 20%;
   margin-right: 5%;
   padding-bottom:11.5%;
@@ -196,7 +196,7 @@ code {
   list-style-type: none;
   cursor: pointer;  
 }
-.dash .headerdash .search{
+ .headerdash .search{
   margin-left: 3%;
   width: 30%;
   display: flex;
@@ -206,31 +206,31 @@ code {
 .icon{
   color: #463804;
 }
-.dash .headerdash .nav ul  li:hover{
+ .headerdash .nav ul  .icon:hover{
   color: #f99806;
   border-bottom: 5px solid #f99806;
 }
-.dash .headerdash .search  form{
+ .headerdash .search  form{
   width: 100%;
   align-self: center;
 }
-.dash .headerdash .search form input{
+ .headerdash .search form input{
   width: 50%;
   padding: 8px;
   align-items: center;
   border-radius: 10px;
   border: none;
 }
-.dash .headerdash .search form input:hover{
+ .headerdash .search form input:hover{
   border: 2px solid #f99806;
 }
-.dash .headerdash .profile{
+ .headerdash .profile{
   display: flex;
   flex-direction: row;
   width: 20%;
   align-items: center;
 }
-.dash .headerdash .profile .proimg{
+ .headerdash .profile .proimg{
   display: flex;
   flex-direction: row;
   width: 25%;
@@ -241,13 +241,13 @@ code {
   align-items: center;
   color: #463804;
 }
-.dash .dashcon{
+ .dashcon{
   display: flex;
   flex-direction: row;
   height: 90vh;
   overflow-y: hidden;
 }
-.dash .dashcon .grppanel{
+ .dashcon .grppanel{
   display: flex;
   flex-direction: column;
   width: 20%;
@@ -255,7 +255,7 @@ code {
   background-color: #a7a39b35;
   margin:2% 0 0 2% ;
 }
-.dash .dashcon .grppanel .grppanelheader{
+ .dashcon .grppanel .grppanelheader{
   display: flex;
   flex-direction: row;
   width:100%;
@@ -265,15 +265,15 @@ code {
   cursor: pointer;
 }
 
-.dash .dashcon .grppanel .grppanelheader h1{
+ .dashcon .grppanel .grppanelheader h1{
   font-size:x-large;
   margin-left: 20px;
   align-self: center;
 }
-.dash .dashcon .grppanel .grppanelheader .plus{
+ .dashcon .grppanel .grppanelheader .plus{
  align-self: center;
 }
-.dash .dashcon .postbox{
+ .dashcon .postbox{
   display: flex;
   flex-direction: column;
   width: 50%;

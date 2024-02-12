@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Content from '../components/Createacc/Content'
 import Api_req from '../Api_req'
 import {  useNavigate } from 'react-router-dom'
@@ -8,16 +8,15 @@ const Createacc = ({user,setuser}) => {
        const [email,setemail]=useState('')
        const [passcode,setpasscode]=useState('')
        const [conpass,setconpass]=useState('')
-       const url='http://localhost:5000/user'
+       const url='http://localhost:3500/users'
        const navigate=useNavigate()
        const handlesignup=async(e)=>{
               e.preventDefault()
               console.log(passvalidation())
               if(passvalidation()===passcode){    
                  const id= user.length ? user[user.length-1].id+1:1
-                 const newuser={id,username:username,email:email,passcode:passcode}
+                 const newuser={username:username,password:passcode,roles:["user"]}
                  const newdata={...user,newuser}
-                 setuser(newdata)
                  const postoption={
                      method: 'POST',
                      headers: {'Content-Type':'application/json'},
@@ -25,9 +24,22 @@ const Createacc = ({user,setuser}) => {
                    }
                    const result=await Api_req(url,postoption)
                    console.log(result)
+                   const fetch_data=async ()=>{
+                    try {
+                      const res=await fetch(url)
+                      if(!res.ok) throw Error("error")
+                      const users= await res.json()
+                      setuser(users)
+                      console.log(users)
+                    } catch (error) {
+                      
+                    }  
+                  }
+                   fetch_data()
                    navigate('/login')
               }else{console.log("error")
                      navigate("/signup")}
+                     
        }
        const passvalidation=()=>{
             if(passcode===conpass){
