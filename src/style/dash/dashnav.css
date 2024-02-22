@@ -1,0 +1,32 @@
+  .dashnav{
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    background-color: #F9F0DB;
+  }
+    .dashnav ul{
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content:left;
+    text-decoration: none;
+  }
+    .dashnav ul .text{
+    width: 20%;
+    margin-right:10px;
+    padding-bottom:10px;
+    display: flex;
+    justify-content: center;
+    text-decoration: none; 
+    list-style-type: none;
+    cursor: pointer;  
+    font-size: larger;
+    font-weight: bolder;
+  }
+  .text{
+    color: #463804;
+  }
+   .dashnav ul  .text:hover{
+    color: #f99806;
+    border-bottom: 5px solid #f99806;
+  }

@@ -7,7 +7,6 @@ const Content = () => {
          <div className="heading">
          <h1>Where question <br /> connect us all</h1>
          </div>
-        
         <h3>Join now</h3>
         <div className="signupsection">
         <li><span><img src={google} alt='' className='google'/></span>  <span>signup with google</span></li>

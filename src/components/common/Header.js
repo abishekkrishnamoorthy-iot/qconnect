@@ -7,7 +7,7 @@ const Header = () => {
   return (
     <div className='headerdash'>
       <div className="logo">
-         <h1>LOGO</h1>
+         <h1><span style={{color:"#ee930b"}}>Q</span>connect</h1>
       </div>
       <Nav/>
       <Search/>

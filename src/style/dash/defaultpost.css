@@ -5,8 +5,9 @@
     justify-content: left;
     height: 15vh;
     background-color:whitesmoke;
-    margin-top: 10px;
+    margin-top: 5px;
     border-radius: 10px;
+    border: 2px solid gray;
 }
 .defaultpost .userprofile{
     margin-top: 10px;

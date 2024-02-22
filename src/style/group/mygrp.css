@@ -1,4 +1,4 @@
-.grpdash{
+.mygrp{
     background-color: #F8F4EC;
     width: 100%;
     height: 100vh;
@@ -6,7 +6,7 @@
     flex-direction: column;
   }
 
-  .grpdash .headerdash{
+  .mygrp .headerdash{
     color: #eabb14;
     background-color: #F9F0DB;
     width: 100%;
@@ -15,19 +15,19 @@
     flex-direction: row;
     box-shadow: 2px 5px 4px #80808067;
   }
-  .grpdash .headerdash .logo{
+  .mygrp .headerdash .logo{
     margin-left: 5%;
     width: 15%;
     display: flex;
     justify-content: center;
   }
-  .grpdash .headerdash .nav{
+  .mygrp .headerdash .nav{
     width: 35%;
     display: flex;
     flex-direction: row;
   
   }
-  .grpdash .headerdash .nav ul{
+  .mygrp .headerdash .nav ul{
     width: 100%;
     display: flex;
     flex-direction: row;
@@ -35,7 +35,7 @@
     text-decoration: none;
     
   }
-  .grpdash .headerdash .nav ul li{
+  .mygrp .headerdash .nav ul li{
     width: 20%;
     margin-right: 5%;
     padding-bottom:11.5%;
@@ -45,7 +45,7 @@
     list-style-type: none;
     cursor: pointer;  
   }
-  .grpdash .headerdash .search{
+  .mygrp .headerdash .search{
     margin-left: 3%;
     width: 30%;
     display: flex;
@@ -55,31 +55,31 @@
   .icon{
     color: #463804;
   }
-  .grpdash .headerdash .nav ul  .icon:hover{
+  .mygrp .headerdash .nav ul  .icon:hover{
     color: #f99806;
     border-bottom: 5px solid #f99806;
   }
-  .grpdash .headerdash .search  form{
+  .mygrp .headerdash .search  form{
     width: 100%;
     align-self: center;
   }
-  .grpdash .headerdash .search form input{
+  .mygrp .headerdash .search form input{
     width: 50%;
     padding: 8px;
     align-items: center;
     border-radius: 10px;
     border: none;
   }
-  .grpdash .headerdash .search form input:hover{
+  .mygrp .headerdash .search form input:hover{
     border: 2px solid #f99806;
   }
-  .grpdash .headerdash .profile{
+  .mygrp .headerdash .profile{
     display: flex;
     flex-direction: row;
     width: 20%;
     align-items: center;
   }
-  .grpdash .headerdash .profile .proimg{
+  .mygrp .headerdash .profile .proimg{
     display: flex;
     flex-direction: row;
     width: 25%;
@@ -90,14 +90,14 @@
     align-items: center;
     color: #463804;
   }
-  .grpdash .grpdashcon{
+  .mygrp .mygrpcon{
     display: flex;
     flex-direction: row;
     height: 90vh;
     overflow-y: hidden;
   }
 
-  .grpdash .grpdashcon .grpbox{
+  .mygrp .mygrpcon .grpbox{
     display: flex;
     flex-direction: column;
     width: 50%;
@@ -154,4 +154,9 @@
  .grpnav ul  .text:hover{
   color: #f99806;
   border-bottom: 5px solid #f99806;
+}
+
+.active{
+    color: #f99806;
+  border-bottom: 5px solid #5d3a05;
 }

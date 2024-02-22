@@ -15,9 +15,16 @@ code {
   display: flex;
   height: 100vh;
   width: 100%;
+  background-color: #F8F4EC;
 }
 .firstpage{
   background-color: #F8F4EC;
+  background-image: url("./style/background5.jpg"); /* The image used */
+  background-color: #cccccc; /* Used if the image is unavailable */
+  height: 100vh; /* You must set a specified height */
+  background-position: center; /* Center the image */
+  background-repeat: no-repeat; /* Do not repeat the image */
+  background-size: cover;
   display: flex;
   width: 100%;
   height: 100vh;
@@ -27,10 +34,11 @@ code {
 .firstpage .header{
   display: flex;
   justify-content: center;
-  width: 60%;
+  width: 58%;
   height: 100vh;
-  background-color: #F8F4EC;
+  background-color:transparent;
   text-align: center;
+  border-radius: 20px;
   
 }
 .firstpage .header h1{
@@ -43,9 +51,13 @@ code {
   flex-direction: column;
   padding-left: 10px;
   padding-right: 10px;
-  width: 40%;
-  height: 100vh;
-  background-color: #F8F4EC;
+  width: 30%;
+  margin-left: 5%;
+  margin-top: 5px;
+  height: 98vh;
+  background-color: #f8f4ecc8;
+  border-radius: 20px;
+
  
 }
 .con .heading{
@@ -71,7 +83,7 @@ code {
   width: 60%;
   height: 5vh;
   margin-top: 20PX;
-  background-color: #FFC061;
+  background-color: #fca31d;
   border: none;
   border-radius: 50px;
   text-decoration: none;
@@ -107,7 +119,7 @@ code {
   font-size: 20px;
 }
 
-.loginpage , .signuppage{
+.signuppage{
   background-color: #F8F4EC;
   height: 100vh;
   width: 100%;
@@ -115,38 +127,58 @@ code {
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  background-image: url("./style/bgsignup.jpg"); /* The image used */
+  background-color: #cccccc; /* Used if the image is unavailable */
+  height: 100vh; /* You must set a specified height */
+  background-position: center; /* Center the image */
+  background-repeat: no-repeat; /* Do not repeat the image */
+  background-size: cover;
 }
-.loginpage .loginpanel,.signuppanel{
-  background-color: #ffc06140;
+.signuppanel{
+  background-color: #ffc061cc;
   width: 30%;
   height: auto;
   border-radius: 20px;
   text-align: center;
 }
-.loginpage .loginpanel form,.signuppanel form{
+.signuppanel form{
   display: flex;
   flex-direction: column;
   padding: 30px;
 }
-.loginpage .loginpanel form input ,.signuppanel form input{
+.signuppanel form input{
   margin-bottom: 30px;
   width: 80%;
-  border: 1px solid #f99806;
+  border: 1px solid #462b03;
   border-radius: 20px;
   text-align: center;
   padding: 10px;
   align-self: center;
   background-color: transparent;
+  font-size: larger;
+  font-weight: bolder;
+  color: #ffffff;
 }
-.loginpage .loginpanel form button,.signuppanel form button{
+.signuppanel form button{
   margin-bottom: 30px;
-  border: 1px solid #f99806;
+  border: 1px solid #734806;
   border-radius: 20px;
   text-align: center;
   width: 50%;
   padding: 10px;
   align-self: center;
-  background-color: #FFC061;
+  background-color: #f6990f;
+}
+
+.signuppanel form button:hover{
+  margin-bottom: 30px;
+  border: 1px solid #734806;
+  border-radius: 20px;
+  text-align: center;
+  width: 50%;
+  padding: 10px;
+  align-self: center;
+  background-color: #8a5608;
 }
 
 .dash{
@@ -171,6 +203,7 @@ code {
   width: 15%;
   display: flex;
   justify-content: center;
+  align-self: center;
 }
  .headerdash .nav{
   width: 35%;
@@ -220,6 +253,7 @@ code {
   align-items: center;
   border-radius: 10px;
   border: none;
+
 }
  .headerdash .search form input:hover{
   border: 2px solid #f99806;
@@ -277,11 +311,24 @@ code {
   display: flex;
   flex-direction: column;
   width: 50%;
-  height: auto;
+  height: 85vh;
   padding-bottom: 2px;
-  background-color: #a7a39b35;
+  background-color: #a7a39b00;
   margin:2% 0 0 2% ;
   overflow-y:scroll ;
+}
+
+
+
+
+
+::placeholder {
+  color: rgb(0, 0, 0);
+  opacity: 1; /* Firefox */
+}
+
+::-ms-input-placeholder { /* Edge 12 -18 */
+  color: red;
 }
 
 /* width */
@@ -330,6 +377,7 @@ code {
     flex-direction: column;
     padding-left: 10px;
     padding-right: 10px;
+    margin: 0;
     width: 100%;
     height: 80%;
     background-color: #F8F4EC;

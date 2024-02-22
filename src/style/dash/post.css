@@ -2,15 +2,17 @@
     display: flex;
     flex-direction: column;
     justify-content: left;
-    height: 30vh;
+    min-height: 30vh;
     background-color:whitesmoke;
     margin-top: 10px;
     border-radius: 10px;
+    border: 1px solid gray;
 }
 .post .userprofile{
     margin-top: 10px;
     margin-left: 5px;
     width: 60%;
+    height: 10vh;
     display: flex;
     flex-direction: row;
     text-align: center;
@@ -61,4 +63,60 @@
 .post .userprofile .followbtn button:hover{
     border: 2px solid #FFC061;
     background-color:#f99806;
+}
+
+
+.post .userprofile .deletebtn{
+    display: flex;
+    justify-content: flex-end;
+    align-self: center;
+    width: 40%;
+}
+.post .userprofile .deletebtn button{
+    align-self:flex-end;
+    margin-left: 30%;
+    width: 90%;
+    padding: 3%;
+    border-radius: 20px;
+    background-color: transparent;
+    color:#f92e06;
+}
+
+.post .userprofile .deletebtn button:hover{
+ color: aliceblue;   
+}
+.postcontent{
+    display: flex;
+    flex-direction: column;
+    padding-left: 30px;
+    padding-right: 30px;
+    height:20vh ;
+    border: 2px solid gray;
+}
+
+.postcontent .lenans{
+    background-color: rgba(128, 128, 128, 0.433);
+    color: rgba(0, 0, 0, 0.574);
+    width: 20%;
+    text-align: center;
+    border-radius: 20px;
+    text-decoration: none;   
+}
+.postcontent .ansbtn{
+    width: 20%;
+    align-self: self-end;
+    padding: 10px;
+    border-radius: 20px;
+    background-color: #f9980695;
+    border: 1px solid #f99806;
+    margin-bottom: 2px;
+}
+.postcontent .ansbtn:hover{
+    width: 20%;
+    align-self: self-end;
+    padding: 10px;
+    border-radius: 20px;
+    background-color: #f99806;
+    border: 3px solid #f99806;
+    border: none;
 }

@@ -1,0 +1,65 @@
+.loginpage {
+    background-color: #F8F4EC;
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-image: url("../background4.jpg"); /* The image used */
+    background-color: #cccccc; /* Used if the image is unavailable */
+    height: 100vh; /* You must set a specified height */
+    background-position: center; /* Center the image */
+    background-repeat: no-repeat; /* Do not repeat the image */
+    background-size: cover;
+  }
+  .loginpage .loginpanel{
+    background-color: #ffc0617d;
+    width: 30%;
+    height: auto;
+    border-radius: 20px;
+    text-align: center;
+  }
+  .loginpage .loginpanel form{
+    display: flex;
+    flex-direction: column;
+    padding: 30px;
+  }
+  .loginpage .loginpanel form input {
+    margin-bottom: 30px;
+    width: 80%;
+    border: 2px solid #f99806;
+    border-radius: 20px;
+    text-align: center;
+    padding: 10px;
+    align-self: center;
+    background-color: transparent;
+  }
+  .loginpage .loginpanel form button{
+    margin-bottom: 30px;
+    border: 1px solid #f99806;
+    border-radius: 20px;
+    text-align: center;
+    width: 50%;
+    padding: 10px;
+    align-self: center;
+    background-color: #ffa826;
+  }
+  .loginpage .loginpanel form button:hover{
+    margin-bottom: 30px;
+    border: 1px solid #f99806;
+    border-radius: 20px;
+    text-align: center;
+    width: 50%;
+    padding: 10px;
+    align-self: center;
+    background-color: #ee930b;
+  }
+  .loginpage ::placeholder {
+    color: whitesmoke;
+    opacity: 1; /* Firefox */
+    font-size: large;
+    font-weight: bolder;
+  }
+  
+  

@@ -1,0 +1,235 @@
+.quizform{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+}
+.quizform .form{
+    display: flex;
+    flex-direction: column;
+    width: 50%;
+    min-height: 50vh;
+    padding-bottom: 2px;
+    background-color: #a7a39b8b;
+    overflow-y:scroll ;
+    align-self: center;
+    align-items: center;
+    margin: 1% 
+}
+
+.quizform .form h2{
+   
+    align-self: center;
+}
+.quizform .form form {
+    width: 100%;
+}
+.quizform .form .quiztitle, .des{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin-top: 10px;
+}
+.quizform .form .quiztitle input{
+    font-size: larger;
+    align-self: center;
+    width: 80%;
+    border-radius: 20px;
+    padding: 5px;
+    border: none;
+}
+.quizform .form .des .textarea{
+    font-size: larger;
+    align-self: center;
+    width: 80%;
+    min-height: 20vh;
+    border-radius: 10px;
+    padding: 5px;
+    border: none;
+    resize: none;
+}
+
+.addqesbtn{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin-top: 10px;
+   
+}
+.creqesbtn{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    align-self: center;
+    margin-top: 10px;
+}
+
+.creqesbtn button{
+    width: 30%;
+    padding: 20px;
+    align-self: center;
+    margin-top: 10px;
+    border-radius: 20px;
+    background-color: #f99806;
+    border: 1px solid #ecd8ba;
+    font-size: larger;
+    font-weight: bolder;
+    color: white;
+}
+.creqesbtn button:hover{
+    width: 30%;
+    padding: 20px;
+    align-self: center;
+    margin-top: 10px;
+    border-radius: 20px;
+    background-color: #f9980667;
+    border: 1px solid #ecd8ba;
+    font-size: larger;
+    font-weight: bolder;
+    color: white;
+}
+
+
+.quizform .ques {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    align-items: center;
+    margin-top: 10px;
+}
+
+
+
+
+.ques .qinput, .selecttype, .crctans, .msgcrct , .msgincrct,.expl, .points {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    align-items: center;
+}
+
+.ques .qinput input,.selecttype select, .msgcrct input, .crctans select, .msgincrct input, .expl input{
+    width: 70%;
+    border: none;
+    border-radius: 20px;
+    padding: 10px;
+    font-size: large;
+    margin-top: 10px;   
+}
+
+
+.ques .ans {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    align-items: center;
+}
+.ques .ans .choice{
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.ques .ans .choice input {
+    width: 50%;
+    align-self: center;
+}
+
+.ques .ans .choice button {
+    width: 10%;
+    align-self: center;
+    margin-left: 50px;
+    padding: 10px;
+
+}
+.ques .ans input{
+    width: 70%;
+    border: none;
+    border-radius: 20px;
+    padding: 10px;
+    font-size: large;
+    margin-top: 10px;   
+}
+
+.ques .points input{
+    width: 30%;
+    border: none;
+    border-radius: 20px;
+    padding: 10px;
+    font-size: large;
+    margin-top: 10px;
+}
+
+.ques .removeques{
+    align-self: center;
+    width: 10%;
+    padding: 10px;
+    margin-top: 20px;
+    border: 2px solid #1a1714;
+    border-radius: 20px;
+    background-color: #f99806;
+}
+
+.ques .removeques:hover
+{
+    background-color: #e5d2b6;   
+    width: 20%;
+}
+
+.submit{
+    width: 20%;
+    background-color: #f99806;
+    color: #ecd8ba;
+    font-size: larger;
+    font-weight: bolder;
+    border: none;
+    border-radius: 20px;
+    padding: 10px;
+    margin-top: 10px;
+    margin-left: 40%;
+    margin-right: 40%;
+}
+ .submit:hover{
+    width: 20%;
+    color: white;
+    background-color: #f9980696;
+}
+.addqesbtn .addq{
+    width: 20%;
+    padding: 10px;
+    background-color: #f99806;
+    border-radius: 30px;
+    align-self: flex-end;
+    border: none;
+}
+
+ .clans{
+    width: 10%;
+    padding: 10px;
+    background-color: #ef0a0a;
+    border-radius: 30px;
+    align-self: flex-end;
+    border: none;
+}
+.adans{
+    width: 10%;
+    padding: 10px;
+    background-color: #f99806;
+    color: rgb(22, 3, 3);
+    border-radius: 10px;
+    margin-top: 5px;
+    align-self: center;
+    border: none;
+}
+::-webkit-input-placeholder {
+    text-align: center;
+  }
+  
+  :-moz-placeholder {
+    text-align: center;
+  }
