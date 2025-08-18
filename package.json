@@ -31,7 +31,6 @@
     "react-scripts": "^5.0.1",
     "reactjs-popup": "^2.0.6",
     "redux": "^5.0.1",
-    "redux-form": "^8.3.10",
     "rn-nodeify": "^10.3.0",
     "web-vitals": "^2.1.4"
   },
