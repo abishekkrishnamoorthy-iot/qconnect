@@ -1,25 +1,43 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../style/login/loginpage.css'
+import '../style/login/loginpage.css';
+import { useAuth } from '../context/AuthContext';
 
-const Login = ({setauth}) => {
+const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
 
-    if (username && password) {
-      setauth(true);
-      navigate('/home');
+    if (!username || !password) {
+      setError('Please fill in all fields');
+      setLoading(false);
+      return;
     }
+
+    const result = await login(username, password);
+    
+    if (result.success) {
+      navigate('/home');
+    } else {
+      setError(result.error || 'Failed to login. Please check your credentials.');
+    }
+    
+    setLoading(false);
   };
 
   return (
     <div className='loginpage'>
       <div className="loginpanel">
         <h2>Qconnect</h2>
+        {error && <div style={{color: 'red', marginBottom: '10px'}}>{error}</div>}
         <form onSubmit={handleLogin}>
           <div>
             <input
@@ -28,7 +46,8 @@ const Login = ({setauth}) => {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
-              placeholder='Username'
+              placeholder='Username or Email'
+              disabled={loading}
             />
           </div>
           <div>
@@ -38,10 +57,13 @@ const Login = ({setauth}) => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              placeholder='Passcode'
+              placeholder='Password'
+              disabled={loading}
             />
           </div>
-          <button type='submit'>Login</button>
+          <button type='submit' disabled={loading}>
+            {loading ? 'Logging in...' : 'Login'}
+          </button>
         </form>
       </div>
     </div>

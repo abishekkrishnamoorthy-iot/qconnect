@@ -2,12 +2,11 @@ import React from 'react'
 import Feed from './Feed'
 import Dashnav from './Dashnav'
 
-const Postpage = ({cudetails,setauth,id,qpost,setqpost}) => {
+const Postpage = ({cudetails, id, qpost, setqpost}) => {
   return (
     <div className='postbox'>
       <Dashnav/>
-      <Feed setauth={setauth}
-            id={id}
+      <Feed id={id}
             qpost={qpost}
             setqpost={setqpost}
             cudetails={cudetails}/>

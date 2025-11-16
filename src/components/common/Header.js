@@ -2,6 +2,7 @@ import React from 'react'
 import Nav from './Nav'
 import Search from './Search'
 import Profile from './Profile'
+import Notifications from './Notifications'
 
 const Header = () => {
   return (
@@ -11,6 +12,7 @@ const Header = () => {
       </div>
       <Nav/>
       <Search/>
+      <Notifications/>
       <Profile/>
     </div>
   )
