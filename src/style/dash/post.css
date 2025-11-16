@@ -3,10 +3,15 @@
     flex-direction: column;
     justify-content: left;
     min-height: 30vh;
-    background-color:whitesmoke;
+    background-color:white;
     margin-top: 10px;
-    border-radius: 10px;
-    border: 1px solid gray;
+    border-radius: 12px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    transition: box-shadow 0.3s ease;
+}
+.post:hover{
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 .post .userprofile{
     margin-top: 10px;
@@ -30,8 +35,10 @@
     margin-top: 5px;
 }
 .post .userprofile .userdetials h6{
- font-weight: 100;
-
+ font-weight: 400;
+ font-size: 13px;
+ color: #666;
+ letter-spacing: 0.3px;
 }
 .post .userprofile .img{
     width: 40px;
@@ -54,15 +61,21 @@
     align-self: center;
     margin-left: 20%;
     width: 90%;
-    padding: 3%;
+    padding: 8px 16px;
     border: 2px solid #FFC061;
-    border-radius: 20px;
+    border-radius: 8px;
     background-color: transparent;
-
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
 }
 .post .userprofile .followbtn button:hover{
-    border: 2px solid #FFC061;
+    border: 2px solid #f99806;
     background-color:#f99806;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 
@@ -90,33 +103,44 @@
     flex-direction: column;
     padding-left: 30px;
     padding-right: 30px;
-    height:20vh ;
-    border: 2px solid gray;
+    height:20vh;
+    border-top: 1px solid #e0e0e0;
+    margin-top: 10px;
 }
 
 .postcontent .lenans{
-    background-color: rgba(128, 128, 128, 0.433);
-    color: rgba(0, 0, 0, 0.574);
+    background-color: #f0f0f0;
+    color: #555;
     width: 20%;
     text-align: center;
-    border-radius: 20px;
-    text-decoration: none;   
+    border-radius: 6px;
+    text-decoration: none;
+    padding: 4px 8px;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+.postcontent .lenans:hover{
+    background-color: #e0e0e0;
+    color: #333;
 }
 .postcontent .ansbtn{
     width: 20%;
     align-self: self-end;
-    padding: 10px;
-    border-radius: 20px;
+    padding: 10px 20px;
+    border-radius: 8px;
     background-color: #f9980695;
     border: 1px solid #f99806;
     margin-bottom: 2px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
 }
 .postcontent .ansbtn:hover{
-    width: 20%;
-    align-self: self-end;
-    padding: 10px;
-    border-radius: 20px;
     background-color: #f99806;
-    border: 3px solid #f99806;
     border: none;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(249, 152, 6, 0.3);
 }

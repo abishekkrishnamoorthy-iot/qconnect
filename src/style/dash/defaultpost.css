@@ -1,13 +1,13 @@
 .defaultpost{
-
     display: flex;
     flex-direction: column;
     justify-content: left;
     height: 15vh;
-    background-color:whitesmoke;
+    background-color:white;
     margin-top: 5px;
-    border-radius: 10px;
-    border: 2px solid gray;
+    border-radius: 12px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 .defaultpost .userprofile{
     margin-top: 10px;
@@ -31,8 +31,10 @@
     margin-top: 5px;
 }
  .userprofile .userdetials h6{
- font-weight: 100;
-
+ font-weight: 400;
+ font-size: 13px;
+ color: #666;
+ letter-spacing: 0.3px;
 }
  .userprofile .img{
     width: 40px;
@@ -56,24 +58,37 @@
 .question input{
     width: 60%;
     margin-left: 40px;
-    border: none;
-    border-radius: 20px;
-    padding: 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 12px;
     background-color: #F8F4EC;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+}
+.question input:focus{
+    outline: none;
+    border-color: #f99806;
+    box-shadow: 0 0 0 3px rgba(249, 152, 6, 0.1);
 }
 
 
-.question   button{
+.question button{
     align-self: center;
     margin-left: 10%;
     width: 10%;
-    padding: 5px;
+    padding: 10px 20px;
     border: 2px solid #FFC061;
-    border-radius: 20px;
+    border-radius: 8px;
     background-color: transparent;
-
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
 }
 .question button:hover{
-border: 2px solid #FFC061;
-background-color:#f99806;
+    border: 2px solid #f99806;
+    background-color:#f99806;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }

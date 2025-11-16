@@ -5,38 +5,14 @@ import '../../style/dash/post.css';
 
 const Defaultpost = ({ cudetails }) => {
   const [title, setTitle] = useState('');
-  const [text, setText] = useState('Default post');
-  const userdetails=localStorage.getItem('cudetails')
-  const userid=JSON.stringify(userdetails)
-  console.log()
-  const handlePostQuestion = async () => {
-    try {
-      const accessToken = localStorage.getItem('accessToken');
-      const postData = {
-        user: cudetails._id, // Example user ID
-        title: title,
-        text: 'hello'
-      };
-  
-      const response = await fetch('http://localhost:3500/qpost', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        },
-        body: JSON.stringify(postData)
-      });
-  
-      if (response.ok) {
-        console.log('Question posted successfully');
-      } else {
-        console.error('Failed to post question');
-      }
-    } catch (error) {
-      console.error('Error posting question:', error.message);
+
+  const handlePostQuestion = (e) => {
+    e.preventDefault();
+    if (title.trim()) {
+      alert('Question posted successfully!');
+      setTitle('');
     }
   };
-  
 
   return (
     <div className='defaultpost'>
@@ -46,7 +22,7 @@ const Defaultpost = ({ cudetails }) => {
         </div>
         <div className="userdetials">
           <h5>{cudetails?.username}</h5>
-          <h6>Qconnect user</h6>
+          <h6>Qconnect Professional</h6>
         </div>
       </div>
       <div className="question">

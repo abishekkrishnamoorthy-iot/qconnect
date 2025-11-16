@@ -1,42 +1,26 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import Header from '../components/common/Header'
 import Question from '../components/Answer/Question'
 import '../style/dash/ans.css'
 import Usersans from '../components/Answer/Usersans'
-const Qpost = ({setid,curpost,cudetails}) => {
-    console.log(cudetails?._id)
-    const {id}=useParams()
-    setid(id)
-    console.log(curpost.user)
-    const [ans,setans]=useState([])
-    useEffect(() => {
-      const fetchPostans = async () => {
-        try {
-          const accessToken = localStorage.getItem('accessToken');
-          const response = await fetch(`http://localhost:3500/answers/${id}`, {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${accessToken}`,
-              'Content-Type': 'application/json'
-            }
-          });
-          if (!response.ok) {
-            throw new Error('Failed to fetch user details');
-          }
-          const Data = await response.json();
-          setans(Data)
-        } catch (error) {
-           console.log(error.message);
-        }
-      };
-      if(id?.length){
-        fetchPostans();
-      }
-    }, []);
-    console.log(ans)
 
+const Qpost = ({setid, curpost, cudetails}) => {
+  const {id} = useParams()
+  setid(id)
 
+  const [ans] = useState([
+    {
+      _id: '1',
+      username: 'expert_developer',
+      answer: 'Use functional components with hooks, implement proper error boundaries, optimize performance with React.memo and useMemo, and follow consistent naming conventions throughout your codebase.'
+    },
+    {
+      _id: '2',
+      username: 'senior_architect',
+      answer: 'Focus on component composition over inheritance, keep components small and focused, use TypeScript for better type safety, and implement comprehensive testing strategies.'
+    }
+  ])
 
   return (
     <div className='anspage'>
