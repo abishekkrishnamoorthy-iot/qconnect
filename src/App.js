@@ -123,32 +123,6 @@ function App() {
           </ProtectedRoute>
         }/>
 
-        <Route path="/group/id" element={
-          <ProtectedRoute>
-            <Mygrp
-              setid={setpostId}
-              qpost={qpost}
-              setqpost={setqpost}
-              cudetails={cudetails}
-              setQuizData={setQuizData}
-              quizData={quizData}
-            />
-          </ProtectedRoute>
-        }/>
-
-        <Route path="/followedgrp/id" element={
-          <ProtectedRoute>
-            <Mygrp
-              setid={setpostId}
-              qpost={qpost}
-              setqpost={setqpost}
-              cudetails={cudetails}
-              setQuizData={setQuizData}
-              quizData={quizData}
-            />
-          </ProtectedRoute>
-        }/>
-
         <Route path="/profile" element={
           <ProtectedRoute>
             <Profilepage

@@ -1,20 +1,21 @@
 .defaultpost{
     display: flex;
     flex-direction: column;
-    justify-content: left;
-    height: 15vh;
-    background-color:white;
-    margin-top: 5px;
+    justify-content: flex-start;
+    min-height: auto;
+    background-color: white;
+    margin-bottom: 16px;
     border-radius: 12px;
     border: 1px solid #e0e0e0;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    padding: 16px;
 }
 .defaultpost .userprofile{
-    margin-top: 10px;
-    margin-left: 5px;
-    width: 60%;
+    margin: 0 0 12px 0;
+    width: 100%;
     display: flex;
     flex-direction: row;
+    align-items: center;
     text-align: center;
     background-color: transparent;
 }
@@ -50,22 +51,43 @@
 }
 .question form{
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     width: 100%;
-    margin-top: 10px;
+    gap: 12px;
 }
 
 .question input{
-    width: 60%;
-    margin-left: 40px;
+    width: 100%;
     border: 1px solid #e0e0e0;
     border-radius: 8px;
     padding: 12px;
     background-color: #F8F4EC;
     font-size: 14px;
     transition: border-color 0.3s ease;
+    cursor: pointer;
 }
-.question input:focus{
+
+.question input:hover{
+    border-color: #f99806;
+}
+
+.ask-bar-input {
+    width: 100%;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 12px;
+    background-color: #F8F4EC;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+    cursor: pointer;
+}
+
+.ask-bar-input:hover {
+    border-color: #f99806;
+    box-shadow: 0 0 0 3px rgba(249, 152, 6, 0.1);
+}
+
+.ask-bar-input:focus{
     outline: none;
     border-color: #f99806;
     box-shadow: 0 0 0 3px rgba(249, 152, 6, 0.1);
@@ -73,10 +95,10 @@
 
 
 .question button{
-    align-self: center;
-    margin-left: 10%;
-    width: 10%;
-    padding: 10px 20px;
+    align-self: flex-end;
+    width: auto;
+    min-width: 100px;
+    padding: 10px 24px;
     border: 2px solid #FFC061;
     border-radius: 8px;
     background-color: transparent;

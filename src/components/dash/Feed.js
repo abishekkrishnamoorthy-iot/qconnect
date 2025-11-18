@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import Post from './Post'
 import Defaultpost from './Defaultpost'
+import AskModal from './AskModal'
 import { subscribeToPosts, getPosts } from '../../services/db'
 
 const Feed = ({ id, qpost, setqpost, cudetails, groupId }) => {
   const [refreshTrigger, setRefreshTrigger] = useState(0)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   useEffect(() => {
     // Use real-time subscription for posts
@@ -26,9 +28,24 @@ const Feed = ({ id, qpost, setqpost, cudetails, groupId }) => {
     setRefreshTrigger(prev => prev + 1)
   }
 
+  const handleOpenModal = () => {
+    setIsModalOpen(true)
+  }
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+  }
+
   return (
     <div>
-      <Defaultpost cudetails={cudetails} onPostCreated={handlePostCreated} />
+      <Defaultpost onOpenModal={handleOpenModal} />
+      {isModalOpen && (
+        <AskModal
+          onClose={handleCloseModal}
+          onPostCreated={handlePostCreated}
+          cudetails={cudetails}
+        />
+      )}
       {qpost && qpost.length > 0 ? (
         qpost.map(post => (
           <Post 

@@ -106,22 +106,97 @@ export const getUserByUsername = async (username) => {
  */
 export const createPost = async (postData) => {
   try {
+    console.group("CREATE POST - DB SAVE");
+    console.log("Post data before save:", {
+      userId: postData.userId,
+      username: postData.username,
+      title: postData.title,
+      type: postData.type,
+      mediaCount: postData.media ? postData.media.length : 0
+    });
+    
+    if (postData.media && postData.media.length > 0) {
+      console.log("Media array:", postData.media);
+      postData.media.forEach((item, index) => {
+        console.log(`  Media ${index + 1}:`, {
+          type: item.type,
+          url: item.url ? item.url.substring(0, 50) + '...' : 'MISSING URL'
+        });
+      });
+    }
+    
     const postsRef = ref(database, 'posts');
     const newPostRef = push(postsRef);
     
     const post = {
       ...postData,
+      postId: newPostRef.key,
       _id: newPostRef.key,
-      createdAt: new Date().toISOString(),
-      likes: {},
-      views: 0,
-      answers: {}
+      createdAt: Date.now(),
+      likes: postData.likes || {},
+      views: postData.views || 0,
+      comments: postData.comments || {},
+      answers: postData.answers || {},
+      media: postData.media || []
     };
     
+    console.log("Post object to save:", {
+      postId: post.postId,
+      createdAt: post.createdAt,
+      mediaCount: post.media.length,
+      hasMediaArray: Array.isArray(post.media)
+    });
+    
     await set(newPostRef, post);
-    return { success: true, postId: newPostRef.key, data: post };
+    console.log("✓ Post saved to Firebase");
+    
+    // Verify the saved post
+    try {
+      const savedPostRef = ref(database, `posts/${newPostRef.key}`);
+      const snapshot = await get(savedPostRef);
+      const savedPost = snapshot.val();
+      
+      if (savedPost) {
+        console.log("✓ Post verification successful");
+        console.log("Saved post ID:", savedPost.postId || savedPost._id);
+        console.log("Saved post createdAt:", savedPost.createdAt);
+        console.log("Saved post media count:", savedPost.media ? savedPost.media.length : 0);
+        
+        // Verify media array
+        if (savedPost.media && Array.isArray(savedPost.media)) {
+          console.log("✓ Media array exists and is correct");
+          savedPost.media.forEach((item, index) => {
+            if (item.url && item.url.startsWith('https://res.cloudinary.com/dfayzbhpu/')) {
+              console.log(`  ✓ Media ${index + 1} URL valid`);
+            } else {
+              console.error(`  ✗ Media ${index + 1} URL invalid:`, item.url);
+            }
+          });
+        } else {
+          console.warn("⚠ Media array missing or not an array");
+        }
+        
+        // Check for old fields
+        const oldFields = ['images', 'videos', 'documents', 'imageUrl', 'fileUrl', 'fileType'];
+        const foundOldFields = oldFields.filter(field => savedPost[field] !== undefined);
+        if (foundOldFields.length > 0) {
+          console.warn("⚠ Old fields found in saved post:", foundOldFields);
+        } else {
+          console.log("✓ No old fields found (unified schema)");
+        }
+      } else {
+        console.error("✗ Post verification failed: Post not found in database");
+      }
+    } catch (verifyError) {
+      console.error("✗ Error verifying post:", verifyError);
+    }
+    
+    console.groupEnd();
+    
+    return { success: true, postId: newPostRef.key, data: post, verified: true };
   } catch (error) {
-    console.error('Error creating post:', error);
+    console.error('✗ Error creating post:', error);
+    console.groupEnd();
     return { success: false, error: error.message };
   }
 };
@@ -678,4 +753,5 @@ export const getQuizzes = async () => {
     return { success: false, error: error.message };
   }
 };
+
 

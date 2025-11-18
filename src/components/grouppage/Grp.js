@@ -54,31 +54,31 @@ const Grp = ({ group, onJoin }) => {
   const memberCount = group.members ? Object.keys(group.members).length : 0
 
   return (
-    <div className='grp'>
-      <div className="userprofile">
-        <div className="img">
-          <FontAwesomeIcon icon="fa-solid fa-users" size='xl' className='user'/>
-        </div> 
-        <div className="userdetials">
-          <h5>{group.name}</h5>
-          <h6>Created by {creator?.username || 'Unknown'}</h6>
-          <h6>{memberCount} {memberCount === 1 ? 'member' : 'members'} • {group.category} • {group.privacy}</h6>
-        </div>
-        {currentUser && (
-          <div className="followbtn">
-            <button onClick={handleJoinLeave} disabled={loading}>
-              {loading ? '...' : isMember ? 'Leave' : 'Join'}
-            </button>
-          </div>
-        )}
+    <div className='group-card'>
+      <img 
+        src={group.banner || '/default-banner.jpg'} 
+        className="group-card-banner" 
+        alt={group.name}
+      />
+      <img 
+        src={group.icon || '/default-icon.png'} 
+        className="group-card-icon" 
+        alt={group.name}
+      />
+      <div className="group-card-title">{group.name}</div>
+      <div className="group-card-meta">
+        {memberCount} {memberCount === 1 ? 'member' : 'members'} • {group.category} • {group.privacy}
       </div>
-
-      <div className="postcontent">
-        <p>{group.description}</p>
-        <Link to={`/group/${group._id}`} style={{ color: 'blue', textDecoration: 'underline' }}>
-          View Group
-        </Link>
-      </div>
+      <div className="group-card-desc">{group.description}</div>
+      {currentUser && (
+        <button 
+          onClick={handleJoinLeave} 
+          disabled={loading}
+          className="group-card-join-button"
+        >
+          {loading ? '...' : isMember ? 'Leave' : 'Join'}
+        </button>
+      )}
     </div>
   )
 }
