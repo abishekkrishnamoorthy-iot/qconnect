@@ -100,12 +100,13 @@
   .grpdash .grpdashcon .grpbox{
     display: flex;
     flex-direction: column;
-    width: 50%;
+    width: 100%;
+    max-width: 1100px;
     height: auto;
     margin-top: 20px;
     padding-bottom: 2px;
     background-color: #a7a39b35;
-    margin-right:auto ;
+    margin-right: auto;
     margin-left: auto;
     overflow-y:scroll ;
   }
@@ -154,4 +155,338 @@
  .grpnav ul  .text:hover{
   color: #f99806;
   border-bottom: 5px solid #f99806;
+}
+
+/* Tab Navigation */
+.grpnav ul {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 20px;
+}
+
+.grpnav ul button.text {
+  background: none;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  color: #666;
+  border-bottom: 3px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.grpnav ul button.text:hover {
+  color: #333;
+}
+
+.grpnav ul button.text.active {
+  color: #f99806;
+  border-bottom: 3px solid #f99806;
+}
+
+/* Search Bar */
+.search-bar-container {
+  margin-bottom: 20px;
+}
+
+.group-search-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+/* Create Group Form */
+.create-group-box {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  border: 1px solid #e0e0e0;
+}
+
+.create-group-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+.form-row {
+  display: flex;
+  gap: 20px;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+.create-group-button {
+  padding: 12px 20px;
+  background-color: #f99806;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  align-self: flex-end;
+}
+
+.form-error {
+  color: red;
+  margin-bottom: 10px;
+}
+
+.form-success {
+  color: green;
+  margin-bottom: 10px;
+}
+
+/* New and Refactored Styles */
+.filter-container {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+  align-items: center;
+}
+
+.group-search-input {
+  flex-grow: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.filter-dropdown {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #fff;
+}
+
+/* Grid Layout for Explore Groups */
+.explore-groups-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+  padding: 20px 0;
+}
+
+/* Group Card */
+.group-card {
+  background: #f8f0df;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 16px;
+  cursor: pointer;
+  transition: 0.2s ease;
+  width: 100%;
+  max-width: 300px;
+  min-height: 350px;
+}
+
+.group-card:hover {
+  transform: translateY(-4px);
+}
+
+/* Banner Image */
+.group-card-banner {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+
+/* Circular Icon Overlapping Banner */
+.group-card-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: -30px auto 10px auto;
+  border: 3px solid white;
+  display: block;
+}
+
+/* Group Title */
+.group-card-title {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+/* Group Meta Info */
+.group-card-meta {
+  text-align: center;
+  font-size: 13px;
+  color: #666;
+  margin-top: 4px;
+}
+
+/* Group Description */
+.group-card-desc {
+  text-align: center;
+  color: #444;
+  margin-top: 6px;
+  padding: 0 12px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Join Button */
+.group-card-join-button {
+  width: calc(100% - 32px);
+  margin: 16px 16px 0 16px;
+  padding: 10px;
+  border: none;
+  background-color: #f99806;
+  color: white;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-size: 14px;
+}
+
+.group-card-join-button:hover {
+  background-color: #e08a00;
+}
+
+.group-card-join-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.no-groups-found {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  grid-column: 1 / -1;
+}
+
+/* Groups Panel */
+.groups-panel {
+  padding: 20px;
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Modal Content */
+.modal-content {
+  background: #f8f0df;
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease;
+  position: relative;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Modal Header */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Modal Close Button */
+.modal-close-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px 10px;
+  color: #666;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.modal-close-button:hover {
+  background: #e0e0e0;
+  color: #333;
+}
+
+.modal-content .create-group-box {
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+  border: none;
 }

@@ -91,8 +91,76 @@ const Post = ({ post, postid, onDelete }) => {
 
        <div className="postcontent">
            <h3>{post.title}</h3>
-           {post.text && <p style={{ marginTop: '10px', color: '#666' }}>{post.text}</p>}
-           <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '15px' }}>
+           {post.text && <p className="post-text">{post.text}</p>}
+           
+           {/* Media Section */}
+           {post.media && post.media.length > 0 && (
+             <div className="post-media-section">
+               {/* Group media by type for better layout */}
+               {(() => {
+                const images = post.media.filter(item => item.type === 'image');
+                const videos = post.media.filter(item => item.type === 'video');
+                const audios = post.media.filter(item => item.type === 'audio');
+                const documents = post.media.filter(item => item.type === 'document');
+
+                 return (
+                   <>
+                     {/* Images */}
+                     {images.length > 0 && (
+                       <div className="post-media-grid">
+                         {images.map((item, index) => (
+                           <div key={index} className="post-media-item post-image-item">
+                             <img src={item.url} alt={`Post image ${index + 1}`} />
+                           </div>
+                         ))}
+                       </div>
+                     )}
+                     
+                     {/* Videos */}
+                     {videos.length > 0 && (
+                       <div className="post-media-grid">
+                         {videos.map((item, index) => (
+                           <div key={index} className="post-media-item post-video-item">
+                             <video src={item.url} controls />
+                           </div>
+                         ))}
+                       </div>
+                     )}
+                     
+                     {/* Audio */}
+                     {audios.length > 0 && (
+                       <div className="post-media-grid">
+                         {audios.map((item, index) => (
+                           <div key={index} className="post-media-item post-audio-item">
+                             <audio src={item.url} controls style={{ width: '100%' }} />
+                           </div>
+                         ))}
+                       </div>
+                     )}
+                     
+                     {/* Documents */}
+                     {documents.length > 0 && (
+                       <div className="post-documents-list">
+                         {documents.map((item, index) => {
+                           const fileName = item.url.split('/').pop() || `Document ${index + 1}`;
+                           return (
+                             <div key={index} className="post-document-item">
+                               <FontAwesomeIcon icon="fa-solid fa-file" />
+                               <a href={item.url} target="_blank" rel="noopener noreferrer" className="document-link">
+                                 {fileName}
+                               </a>
+                             </div>
+                           );
+                         })}
+                       </div>
+                     )}
+                   </>
+                 );
+               })()}
+             </div>
+           )}
+           
+           <div className="post-actions">
              <Link to={`/home/${post._id}`} className='lenans'>
                {answerCount === 0 ? "No Answers" : `${answerCount} ${answerCount === 1 ? 'Answer' : 'Answers'}`}
              </Link>
