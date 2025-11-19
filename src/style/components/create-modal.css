@@ -1,0 +1,232 @@
+/* Create Modal Overlay */
+.create-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeInBackdrop 150ms ease;
+  padding: 20px;
+}
+
+@keyframes fadeInBackdrop {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Create Modal Content */
+.create-modal-content {
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  max-width: 760px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: scaleUpModal 180ms ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes scaleUpModal {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Modal Header */
+.create-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  border-bottom: 1px solid #e0e0e0;
+  flex-shrink: 0;
+}
+
+.create-modal-header h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #463804;
+}
+
+.create-modal-close {
+  background: none;
+  border: none;
+  font-size: 32px;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  line-height: 1;
+}
+
+.create-modal-close:hover {
+  background-color: #f0f0f0;
+  color: #463804;
+}
+
+.create-modal-close:focus {
+  outline: 2px solid #FFC061;
+  outline-offset: 2px;
+}
+
+/* Modal Tabs */
+.create-modal-tabs {
+  display: flex;
+  border-bottom: 2px solid #e0e0e0;
+  padding: 0 24px;
+  gap: 8px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.create-modal-tab {
+  padding: 12px 24px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-size: 15px;
+  font-weight: 600;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 8px 8px 0 0;
+  position: relative;
+  top: 2px;
+  z-index: 2;
+  pointer-events: auto;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.create-modal-tab:hover {
+  color: #463804;
+  background-color: #F9F0DB;
+}
+
+.create-modal-tab.active {
+  color: #f99806;
+  border-bottom-color: #f99806;
+  background-color: transparent;
+}
+
+.create-modal-tab:focus {
+  outline: 2px solid #FFC061;
+  outline-offset: -2px;
+}
+
+/* Modal Body */
+.create-modal-body {
+  padding: 24px;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.create-modal-tabpanel {
+  width: 100%;
+}
+
+/* ARIA Live Region */
+.create-modal-aria-live {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .create-modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .create-modal-content {
+    max-width: 100%;
+    max-height: 95vh;
+    border-radius: 20px 20px 0 0;
+    animation: slideUpModal 200ms ease;
+  }
+
+  @keyframes slideUpModal {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  .create-modal-header {
+    padding: 20px;
+  }
+
+  .create-modal-header h2 {
+    font-size: 20px;
+  }
+
+  .create-modal-tabs {
+    padding: 0 20px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .create-modal-tab {
+    padding: 10px 16px;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  .create-modal-body {
+    padding: 20px;
+  }
+}
+
+/* Custom Scrollbar */
+.create-modal-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.create-modal-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.create-modal-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.create-modal-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+

@@ -2,31 +2,64 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { getGroups, joinGroup, leaveGroup } from '../../services/db'
+import { getGroups, joinGroup, leaveGroup, requestGroupJoin, cancelGroupRequest, getGroup } from '../../services/db'
+import '../../style/group/grouppage.css'
 
 const TrendingGroups = () => {
   const { currentUser } = useAuth()
   const [trendingGroups, setTrendingGroups] = useState([])
   const [loading, setLoading] = useState(true)
   const [joiningGroupId, setJoiningGroupId] = useState(null)
+  const [pendingRequests, setPendingRequests] = useState({})
 
   useEffect(() => {
     loadTrendingGroups()
   }, [])
+
+  useEffect(() => {
+    if (currentUser && trendingGroups.length > 0) {
+      // Check for pending requests in private groups
+      trendingGroups.forEach(group => {
+        if (group.privacy === 'private' && !group.members?.[currentUser.uid]) {
+          checkPendingRequest(group._id)
+        }
+      })
+    }
+  }, [trendingGroups, currentUser])
+
+  const checkPendingRequest = async (groupId) => {
+    if (!groupId || !currentUser) return
+    
+    try {
+      const groupResult = await getGroup(groupId)
+      if (groupResult.success && groupResult.data.requests) {
+        const request = groupResult.data.requests[currentUser.uid]
+        if (request && (request.status === 'pending' || !request.status)) {
+          setPendingRequests(prev => ({ ...prev, [groupId]: true }))
+        } else {
+          setPendingRequests(prev => ({ ...prev, [groupId]: false }))
+        }
+      }
+    } catch (error) {
+      console.error('Error checking pending request:', error)
+    }
+  }
 
   const loadTrendingGroups = async () => {
     setLoading(true)
     const result = await getGroups({ privacy: 'public' })
     
     if (result.success) {
-      // Sort by member count (descending) and take top 6
+      // Sort by member count (descending) and take top 4
       const sorted = result.data
         .map(group => ({
           ...group,
-          memberCount: group.members ? Object.keys(group.members).length : 0
+          memberCount: group.memberCount !== undefined 
+            ? group.memberCount 
+            : (group.members ? Object.keys(group.members).length : 0)
         }))
-        .sort((a, b) => b.memberCount - a.memberCount)
-        .slice(0, 6)
+        .sort((a, b) => (b.memberCount || 0) - (a.memberCount || 0))
+        .slice(0, 4)
       
       setTrendingGroups(sorted)
     }
@@ -34,17 +67,39 @@ const TrendingGroups = () => {
     setLoading(false)
   }
 
-  const handleJoinToggle = async (groupId, isMember) => {
-    if (!currentUser || joiningGroupId) return
+  const handleJoinToggle = async (groupId, group) => {
+    if (!currentUser || joiningGroupId === groupId) return
 
     setJoiningGroupId(groupId)
 
+    const isMember = group.members?.[currentUser.uid]
+    const hasPending = pendingRequests[groupId]
+
     if (isMember) {
+      // Leave group
       const result = await leaveGroup(groupId, currentUser.uid)
       if (result.success) {
         loadTrendingGroups()
       }
+    } else if (group.privacy === 'private') {
+      // Private group: handle request flow
+      if (hasPending) {
+        // Cancel pending request
+        const result = await cancelGroupRequest(groupId, currentUser.uid, currentUser.uid)
+        if (result.success) {
+          setPendingRequests(prev => ({ ...prev, [groupId]: false }))
+          loadTrendingGroups()
+        }
+      } else {
+        // Request to join
+        const result = await requestGroupJoin(groupId, currentUser.uid)
+        if (result.success) {
+          setPendingRequests(prev => ({ ...prev, [groupId]: true }))
+          loadTrendingGroups()
+        }
+      }
     } else {
+      // Public group: join immediately
       const result = await joinGroup(groupId, currentUser.uid)
       if (result.success) {
         loadTrendingGroups()
@@ -72,32 +127,59 @@ const TrendingGroups = () => {
         ) : (
           trendingGroups.map(group => {
             const isMember = currentUser && group.members?.[currentUser.uid]
+            const hasPending = pendingRequests[group._id] || false
+            const memberCount = group.memberCount !== undefined 
+              ? group.memberCount 
+              : (group.members ? Object.keys(group.members).length : 0)
+            
+            // Determine button text
+            let buttonText = 'Join'
+            if (isMember) {
+              buttonText = 'Leave'
+            } else if (group.privacy === 'private') {
+              buttonText = hasPending ? 'Cancel Request' : 'Request to Join'
+            }
             
             return (
-              <div key={group._id} className="trending-item">
+              <div key={group._id} className="group-card">
                 <Link 
                   to={`/group/${group._id}`} 
-                  className="trending-item-link"
-                  style={{ textDecoration: 'none', flex: 1 }}
+                  style={{ textDecoration: 'none', color: 'inherit' }}
                 >
-                  <div className="trending-item-content">
-                    <div className="trending-icon">
-                      <FontAwesomeIcon icon="fa-solid fa-users" />
-                    </div>
-                    <div className="trending-details">
-                      <h4>{group.name}</h4>
-                      <p>{group.memberCount} members</p>
-                    </div>
+                  <img 
+                    src={group.banner || '/default-banner.jpg'} 
+                    className="group-card-banner" 
+                    alt={group.name}
+                  />
+                  <img 
+                    src={group.icon || '/default-icon.png'} 
+                    className="group-card-icon" 
+                    alt={group.name}
+                  />
+                  <div className="group-card-title">{group.name || 'Unnamed Group'}</div>
+                  <div className="group-card-meta">
+                    {memberCount} {memberCount === 1 ? 'member' : 'members'} • {group.category || 'Others'} • {group.privacy || 'public'}
                   </div>
+                  <div className="group-card-desc">{group.description || 'No description'}</div>
                 </Link>
                 {currentUser && (
-                  <button
-                    className={`join-btn ${isMember ? 'joined' : ''}`}
-                    onClick={() => handleJoinToggle(group._id, isMember)}
-                    disabled={joiningGroupId === group._id}
-                  >
-                    {joiningGroupId === group._id ? '...' : isMember ? 'Joined' : 'Join'}
-                  </button>
+                  <>
+                    {isMember && (
+                      <div style={{ textAlign: 'center', fontSize: '12px', color: '#666', marginTop: '8px', marginBottom: '4px' }}>
+                        Member
+                      </div>
+                    )}
+                    <button
+                      className="group-card-join-button"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        handleJoinToggle(group._id, group)
+                      }}
+                      disabled={joiningGroupId === group._id}
+                    >
+                      {joiningGroupId === group._id ? '...' : buttonText}
+                    </button>
+                  </>
                 )}
               </div>
             )

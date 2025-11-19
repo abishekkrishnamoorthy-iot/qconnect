@@ -9,28 +9,21 @@ import { fab } from '@fortawesome/free-brands-svg-icons'
 import { fas } from '@fortawesome/free-solid-svg-icons'
 import { far } from '@fortawesome/free-regular-svg-icons'
 import Group from "./pages/Group";
+import GroupPage from "./pages/GroupPage";
 import Qpost from "./pages/Qpost";
 import Quiz from "./pages/Quiz";
 import QuizForm from "./pages/QuizForm";
 import Mygrp from "./pages/Mygrp";
 import Profilepage from "./pages/Profilepage";
+import NotificationsPage from "./pages/NotificationsPage";
 import ProtectedRoute from "./components/common/ProtectedRoute";
+import OnboardingRoute from "./components/common/OnboardingRoute";
+import LoadingSpinner from "./components/common/LoadingSpinner";
 import { useAuth } from "./context/AuthContext";
 
 function App() {
-  const { currentUser, userData } = useAuth();
+  const { currentUser, userData, loading, authReady, profileLoaded } = useAuth();
   
-  // Use userData from auth context if available, otherwise use placeholder
-  const cudetails = userData ? {
-    _id: currentUser?.uid || '',
-    username: userData.username || '',
-    email: userData.email || currentUser?.email || ''
-  } : {
-    _id: '',
-    username: '',
-    email: ''
-  }
-
   // Posts will be loaded from Firebase in Feed component
   const [qpost, setqpost] = useState([])
 
@@ -44,6 +37,22 @@ function App() {
   })
 
   const [postId, setpostId] = useState('')
+  
+  // Show loading spinner until auth and profile are loaded
+  if (loading || !authReady || (currentUser && !profileLoaded)) {
+    return <LoadingSpinner />;
+  }
+  
+  // Use userData from auth context if available, otherwise use placeholder
+  const cudetails = userData ? {
+    _id: currentUser?.uid || '',
+    username: userData.profile?.username || userData.username || '',
+    email: userData.email || currentUser?.email || ''
+  } : {
+    _id: '',
+    username: '',
+    email: ''
+  }
 
   return (
     <div className="App">
@@ -58,7 +67,18 @@ function App() {
           element={currentUser ? <Navigate to="/home" /> : <Createacc/>}
         />
 
+        <Route 
+          path="/setup" 
+          element={<OnboardingRoute />}
+        />
+
         <Route path="/home" element={
+          <ProtectedRoute>
+            <Navigate to="/home/all" replace />
+          </ProtectedRoute>
+        }/>
+
+        <Route path="/home/all" element={
           <ProtectedRoute>
             <Dash
               setid={setpostId}
@@ -72,6 +92,12 @@ function App() {
         <Route path="/Group" element={
           <ProtectedRoute>
             <Group/>
+          </ProtectedRoute>
+        }/>
+
+        <Route path="/group/:id" element={
+          <ProtectedRoute>
+            <GroupPage/>
           </ProtectedRoute>
         }/>
 
@@ -97,14 +123,7 @@ function App() {
 
         <Route path="/home/quiz" element={
           <ProtectedRoute>
-            <Quiz
-              setid={setpostId}
-              qpost={qpost}
-              setqpost={setqpost}
-              cudetails={cudetails}
-              quizData={quizData}
-              quizpost={quizpost}
-            />
+            <Quiz cudetails={cudetails} />
           </ProtectedRoute>
         }/>
 
@@ -133,6 +152,12 @@ function App() {
               setQuizData={setQuizData}
               quizData={quizData}
             />
+          </ProtectedRoute>
+        }/>
+
+        <Route path="/notification" element={
+          <ProtectedRoute>
+            <NotificationsPage />
           </ProtectedRoute>
         }/>
       </Routes>

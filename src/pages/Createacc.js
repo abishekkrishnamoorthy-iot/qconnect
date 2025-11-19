@@ -10,8 +10,9 @@ const Createacc = () => {
   const [conpass, setconpass] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
   const navigate = useNavigate()
-  const { signup } = useAuth()
+  const { signup, signInWithGoogle } = useAuth()
 
   const handlesignup = async (e) => {
     e.preventDefault();
@@ -36,12 +37,36 @@ const Createacc = () => {
     const result = await signup(email, passcode, username);
     
     if (result.success) {
-      navigate('/home');
+      // Wait a moment for auth state to fully update
+      await new Promise(resolve => setTimeout(resolve, 100));
+      navigate('/setup');
     } else {
       setError(result.error || 'Failed to create account. Please try again.');
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignup = async () => {
+    setError('');
+    setGoogleLoading(true);
+
+    const result = await signInWithGoogle();
+    
+    if (result.success) {
+      // Check if onboarding is completed
+      const firstLoginCompleted = result.userData?.profile?.firstLoginCompleted || result.userData?.setupComplete === true;
+      
+      if (firstLoginCompleted) {
+        navigate('/home');
+      } else {
+        navigate('/setup');
+      }
+    } else if (result.error) {
+      // Only show error if it's not a popup-closed case
+      setError(result.error);
     }
     
-    setLoading(false);
+    setGoogleLoading(false);
   };
 
   return (
@@ -56,8 +81,10 @@ const Createacc = () => {
         conpass={conpass}
         setconpass={setconpass}
         handlesignup={handlesignup}
+        handleGoogleSignup={handleGoogleSignup}
         error={error}
         loading={loading}
+        googleLoading={googleLoading}
       />
     </div>
   )

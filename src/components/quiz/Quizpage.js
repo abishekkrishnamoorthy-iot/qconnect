@@ -1,33 +1,49 @@
-import React from 'react'
+import React, { useState } from 'react'
 import Dashnav from '../dash/Dashnav'
-import QuizForm from '../quizform/Form'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { Link } from 'react-router-dom'
-import Quizpost from './Quizpost'
+import QuizFeed from './QuizFeed'
+import QuizCreationModal from './QuizCreationModal'
+import '../../style/quiz/quiz.css'
 
-const Quizpage = ({cudetails,quizData,post }) => {
-  const Posts = post.filter(p => p.date);
+const Quizpage = ({ cudetails }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
-  Posts.sort((a, b) => new Date(b.date) - new Date(a.date));
-  
-  console.log(quizData)
-  console.log(Posts[0]?.createdBy)
+  const handleOpenModal = () => {
+    setIsModalOpen(true)
+  }
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+  }
+
+  const handleQuizCreated = () => {
+    // Quiz feed will update automatically via real-time subscription
+    handleCloseModal()
+  }
+
   return (
     <div className='postbox'>
-        <Dashnav/>
-        <div className='createquiz'>
+      <Dashnav/>
+      <div className='createquiz'>
         <div className="userprofile">
-        <div className="img">
-          <FontAwesomeIcon icon="fa-solid fa-user" size='xl' className='user'/>
+          <div className="img">
+            <FontAwesomeIcon icon="fa-solid fa-user" size='xl' className='user'/>
+          </div>
+          <div className="userdetials">
+            <h5>{cudetails?.username}</h5>
+            <h6>Qconnect user</h6>
+          </div>
         </div>
-        <div className="userdetials">
-          <h5>{cudetails?.username}</h5>
-          <h6>Qconnect user</h6>
-        </div>
+        <button className='btn' onClick={handleOpenModal}>Create Quiz</button>
       </div>
-        <Link to='/home/quizform' className='btn'>Create Quiz</Link>
-      </div>
-      {Posts.map(post=> <Quizpost key={post._id} post={post}  quizData={quizData}/>)}
+      <QuizFeed cudetails={cudetails} onQuizCreated={handleQuizCreated} />
+      {isModalOpen && (
+        <QuizCreationModal
+          onClose={handleCloseModal}
+          onQuizCreated={handleQuizCreated}
+          cudetails={cudetails}
+        />
+      )}
     </div>
   )
 }

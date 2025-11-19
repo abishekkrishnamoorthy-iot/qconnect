@@ -3,6 +3,46 @@ import { getAuth } from 'firebase/auth';
 import { getDatabase } from 'firebase/database';
 import { getAnalytics } from 'firebase/analytics';
 
+// Clear corrupted Firebase localStorage data if present
+const clearCorruptedFirebaseData = () => {
+  if (typeof window === 'undefined' || !localStorage) return;
+  
+  try {
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (
+        key.startsWith('firebase:') || 
+        key.includes('firebase') || 
+        key.includes('qconnect-88535') ||
+        key.startsWith('firebase_')
+      )) {
+        // Try to parse the value - if it fails, it's corrupted
+        try {
+          const value = localStorage.getItem(key);
+          if (value) {
+            JSON.parse(value);
+          }
+        } catch (parseError) {
+          // This key has corrupted JSON data, remove it
+          keysToRemove.push(key);
+        }
+      }
+    }
+    
+    if (keysToRemove.length > 0) {
+      console.warn(`Clearing ${keysToRemove.length} corrupted Firebase localStorage keys...`);
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      console.log('Cleared corrupted Firebase localStorage data');
+    }
+  } catch (error) {
+    console.error('Error checking Firebase localStorage:', error);
+  }
+};
+
+// Clear corrupted data before initializing Firebase
+clearCorruptedFirebaseData();
+
 // Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyAMlp2h9oXgknTBOxizLhAJeGEIAtDZt-k",

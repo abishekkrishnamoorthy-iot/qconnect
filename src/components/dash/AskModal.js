@@ -311,7 +311,8 @@ const AskModal = ({ onClose, onPostCreated, cudetails }) => {
 
     const result = await createPost({
       userId: currentUser.uid,
-      username: cudetails?.username || userData?.username || 'Unknown',
+      username: cudetails?.username || userData?.profile?.username || userData?.username || 'Unknown',
+      userProfilePic: userData?.profile?.profilePic || userData?.profilePic || '',
       title: questionTitle.trim(),
       text: '',
       groupId: null,
@@ -438,7 +439,8 @@ const AskModal = ({ onClose, onPostCreated, cudetails }) => {
       // Create post with media array
       const result = await createPost({
         userId: currentUser.uid,
-        username: cudetails?.username || userData?.username || 'Unknown',
+        username: cudetails?.username || userData?.profile?.username || userData?.username || 'Unknown',
+        userProfilePic: userData?.profile?.profilePic || userData?.profilePic || '',
         title: postTitle.trim(),
         text: postText.trim() || '',
         groupId: null,

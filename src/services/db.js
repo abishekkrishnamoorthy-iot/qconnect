@@ -9,7 +9,8 @@ import {
   orderByChild, 
   equalTo, 
   onValue, 
-  off
+  off,
+  runTransaction
 } from 'firebase/database';
 import { database } from '../firebase/config';
 
@@ -72,6 +73,25 @@ export const updateUser = async (uid, updates) => {
 };
 
 /**
+ * Update user profile data
+ * @param {string} uid - User ID
+ * @param {object} profileData - Profile data to update
+ */
+export const updateUserProfile = async (uid, profileData) => {
+  try {
+    const profileRef = ref(database, `users/${uid}/profile`);
+    await set(profileRef, {
+      ...profileData,
+      updatedAt: new Date().toISOString()
+    });
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
  * Get user by username
  * @param {string} username - Username to search for
  */
@@ -94,6 +114,108 @@ export const getUserByUsername = async (username) => {
     return { success: false, error: 'User not found' };
   } catch (error) {
     console.error('Error getting user by username:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Check if username exists in username index (fast lookup)
+ * @param {string} username - Username to check
+ * @param {string} excludeUserId - Optional: User ID to exclude from check (for editing own profile)
+ */
+export const checkUsernameInIndex = async (username, excludeUserId = null) => {
+  try {
+    if (!username || username.trim().length === 0) {
+      return { success: true, available: false };
+    }
+
+    const usernameIndexRef = ref(database, `usernames/${username}`);
+    const snapshot = await get(usernameIndexRef);
+    
+    if (snapshot.exists()) {
+      const existingUid = snapshot.val();
+      // If checking for own username during edit, allow it
+      if (excludeUserId && existingUid === excludeUserId) {
+        return { success: true, available: true };
+      }
+      return { success: true, available: false, uid: existingUid };
+    }
+    
+    return { success: true, available: true };
+  } catch (error) {
+    console.error('Error checking username in index:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Check if username is available (uses username index for fast lookup)
+ * @param {string} username - Username to check
+ * @param {string} excludeUserId - Optional: User ID to exclude from check (for editing own profile)
+ */
+export const checkUsernameAvailability = async (username, excludeUserId = null) => {
+  // Use username index for fast lookup
+  return await checkUsernameInIndex(username, excludeUserId);
+};
+
+/**
+ * Create username index entry
+ * @param {string} username - Username
+ * @param {string} uid - User ID
+ */
+export const createUsernameIndex = async (username, uid) => {
+  try {
+    const usernameIndexRef = ref(database, `usernames/${username}`);
+    await set(usernameIndexRef, uid);
+    return { success: true };
+  } catch (error) {
+    console.error('Error creating username index:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Update username index using transaction (atomic)
+ * @param {string} oldUsername - Old username (null/empty if new)
+ * @param {string} newUsername - New username
+ * @param {string} uid - User ID
+ */
+export const updateUsernameIndex = async (oldUsername, newUsername, uid) => {
+  try {
+    // If username is the same, no update needed
+    if (oldUsername && oldUsername === newUsername) {
+      return { success: true };
+    }
+    
+    // If username changed, update index atomically
+    if (oldUsername && oldUsername !== newUsername) {
+      // Remove old username index
+      const oldIndexRef = ref(database, `usernames/${oldUsername}`);
+      await remove(oldIndexRef);
+    }
+    
+    // Add new username index using transaction (atomic check)
+    const newIndexRef = ref(database, `usernames/${newUsername}`);
+    const result = await runTransaction(newIndexRef, (current) => {
+      // If current value is null, username is available
+      if (current === null) {
+        return uid;
+      }
+      // If current value is same uid (updating own username), allow it
+      if (current === uid) {
+        return uid;
+      }
+      // Otherwise, abort transaction (username taken)
+      return undefined; // Abort transaction
+    });
+    
+    if (result.committed) {
+      return { success: true };
+    } else {
+      return { success: false, error: 'Username is already taken' };
+    }
+  } catch (error) {
+    console.error('Error updating username index:', error);
     return { success: false, error: error.message };
   }
 };
@@ -128,6 +250,11 @@ export const createPost = async (postData) => {
     const postsRef = ref(database, 'posts');
     const newPostRef = push(postsRef);
     
+    // Set postedTo field: "everyone" or groupId
+    const postedTo = postData.postedTo || "everyone"
+    // Keep groupId for backward compatibility
+    const groupId = postedTo === "everyone" ? null : postedTo
+
     const post = {
       ...postData,
       postId: newPostRef.key,
@@ -137,7 +264,9 @@ export const createPost = async (postData) => {
       views: postData.views || 0,
       comments: postData.comments || {},
       answers: postData.answers || {},
-      media: postData.media || []
+      media: postData.media || [],
+      postedTo: postedTo,
+      groupId: groupId // Backward compatibility
     };
     
     console.log("Post object to save:", {
@@ -189,6 +318,54 @@ export const createPost = async (postData) => {
       }
     } catch (verifyError) {
       console.error("✗ Error verifying post:", verifyError);
+    }
+    
+    // Create notifications for group members if post is in a group
+    if (postedTo && postedTo !== "everyone") {
+      try {
+        const groupResult = await getGroup(postedTo);
+        if (groupResult.success) {
+          const group = groupResult.data;
+          const members = group.members || {};
+          const memberIds = Object.keys(members);
+          
+          // Get post author username
+          const authorUsername = postData.username || 'Someone';
+          
+          // Format post title for message (truncate if too long)
+          let postTitle = postData.title || '';
+          if (postTitle.length > 50) {
+            postTitle = postTitle.substring(0, 47) + '...';
+          }
+          
+          // Create notification message
+          const message = postTitle 
+            ? `${authorUsername} posted '${postTitle}' in ${group.name}`
+            : `${authorUsername} posted in ${group.name}`;
+          
+          // Create notifications for all members except the post author
+          const notificationPromises = memberIds
+            .filter(memberId => memberId !== postData.userId) // Exclude post author
+            .map(async (memberId) => {
+              await createNotification(memberId, {
+                type: 'group_post',
+                fromUserId: postData.userId, // Post author
+                groupId: postedTo,
+                postId: newPostRef.key,
+                message: message,
+                read: false
+              });
+            });
+          
+          await Promise.all(notificationPromises);
+          console.log(`✓ Created notifications for ${notificationPromises.length} group members`);
+        } else {
+          console.warn('⚠ Group not found for notification creation:', postedTo);
+        }
+      } catch (notifError) {
+        // Don't block post creation if notification fails
+        console.error('Error creating group post notifications:', notifError);
+      }
     }
     
     console.groupEnd();
@@ -289,27 +466,105 @@ export const deletePost = async (postId) => {
 };
 
 /**
+ * Toggle like on a post
+ * @param {string} postId - Post ID
+ * @param {string} userId - User ID
+ * @returns {Promise<object>} { success: boolean, isLiked: boolean, error?: string }
+ */
+export const toggleLikePost = async (postId, userId) => {
+  try {
+    const postRef = ref(database, `posts/${postId}`)
+    
+    // Use transaction to safely toggle like
+    let wasLiked = false
+    const result = await runTransaction(postRef, (post) => {
+      if (!post) {
+        return null // Post doesn't exist
+      }
+      
+      // Initialize likes if it doesn't exist
+      if (!post.likes) {
+        post.likes = {}
+      }
+      
+      // Check current state and toggle
+      wasLiked = post.likes[userId] === true
+      if (wasLiked) {
+        // Unlike: remove user from likes
+        delete post.likes[userId]
+      } else {
+        // Like: add user to likes
+        post.likes[userId] = true
+      }
+      
+      return post
+    })
+    
+    if (result.committed) {
+      // Return the new state (opposite of what it was)
+      return { success: true, isLiked: !wasLiked }
+    } else {
+      return { success: false, error: 'Failed to toggle like' }
+    }
+  } catch (error) {
+    console.error('Error toggling like:', error)
+    return { success: false, error: error.message }
+  }
+}
+
+/**
  * Subscribe to posts with real-time updates
  * @param {function} callback - Callback function to receive posts
- * @param {object} filters - Optional filters
+ * @param {object} filters - Optional filters (postedTo, groupId, userId)
  */
 export const subscribeToPosts = (callback, filters = {}) => {
   let postsRef = ref(database, 'posts');
   
-  if (filters.groupId) {
+  // Priority: postedTo > groupId (backward compat) > userId
+  if (filters.postedTo !== undefined) {
+    // Filter by postedTo field
+    postsRef = query(postsRef, orderByChild('postedTo'), equalTo(filters.postedTo));
+  } else if (filters.groupId) {
+    // Backward compatibility: filter by groupId
     postsRef = query(postsRef, orderByChild('groupId'), equalTo(filters.groupId));
   } else if (filters.userId) {
     postsRef = query(postsRef, orderByChild('userId'), equalTo(filters.userId));
   } else {
-    postsRef = query(postsRef, orderByChild('createdAt'));
+    // For default case, get all posts (don't use orderByChild to avoid excluding posts without createdAt)
+    // We'll sort client-side instead
+    postsRef = ref(database, 'posts');
   }
   
   onValue(postsRef, (snapshot) => {
     if (snapshot.exists()) {
       const posts = snapshot.val();
-      const postsArray = Object.values(posts).sort((a, b) => 
-        new Date(b.createdAt) - new Date(a.createdAt)
-      );
+      let postsArray = Object.values(posts);
+      
+      // Additional client-side filtering for postedTo if needed
+      // (Firebase queries work, but we do extra filtering for safety)
+      if (filters.postedTo !== undefined) {
+        // Explicit filter by postedTo
+        postsArray = postsArray.filter(post => post.postedTo === filters.postedTo);
+      } else if (filters.groupId || filters.userId) {
+        // If filtering by groupId or userId, don't filter by postedTo
+        // (these filters are for specific use cases)
+      } else {
+        // Default: only show posts posted to "everyone" (home feed)
+        // Include posts with postedTo === "everyone" OR posts without postedTo field (backward compatibility)
+        postsArray = postsArray.filter(post => {
+          const postedTo = post.postedTo;
+          // Include if postedTo is "everyone", undefined, null, or doesn't exist
+          return postedTo === "everyone" || postedTo === undefined || postedTo === null || !post.hasOwnProperty('postedTo');
+        });
+      }
+      
+      // Sort by createdAt DESC (client-side)
+      postsArray = postsArray.sort((a, b) => {
+        const aTime = a.createdAt || 0;
+        const bTime = b.createdAt || 0;
+        return bTime - aTime;
+      });
+      
       callback(postsArray);
     } else {
       callback([]);
@@ -327,25 +582,58 @@ export const subscribeToPosts = (callback, filters = {}) => {
  */
 export const createGroup = async (groupData) => {
   try {
+    console.group('CREATE GROUP');
+    console.log('GroupData:', groupData);
+    
+    // Import validation utilities
+    const { sanitizeAndValidateGroup } = await import('../utils/sanitize');
+    
+    // Sanitize and validate input
+    const validation = sanitizeAndValidateGroup(groupData);
+    if (!validation.valid) {
+      console.error('Validation errors:', validation.errors);
+      console.groupEnd();
+      return { success: false, error: validation.errors.join(', ') };
+    }
+    
+    const sanitizedData = validation.sanitized;
+    
     const groupsRef = ref(database, 'groups');
     const newGroupRef = push(groupsRef);
     
     const group = {
-      ...groupData,
+      ...sanitizedData,
       _id: newGroupRef.key,
       createdAt: new Date().toISOString(),
+      banner: sanitizedData.banner || null,
+      icon: sanitizedData.icon || null,
       members: {
-        [groupData.creatorId]: {
+        [sanitizedData.creatorId]: {
           role: 'admin',
           joinedAt: new Date().toISOString()
         }
-      }
+      },
+      admins: {
+        [sanitizedData.creatorId]: true
+      },
+      requests: {},
+      memberCount: 1 // Initialize with creator as first member
     };
     
-    await set(newGroupRef, group);
+    // Also add to userGroups for creator
+    const updates = {};
+    updates[`groups/${newGroupRef.key}`] = group;
+    updates[`userGroups/${sanitizedData.creatorId}/${newGroupRef.key}`] = true;
+    
+    await update(ref(database), updates);
+    
+    console.log('Successfully created group:', newGroupRef.key);
+    console.groupEnd();
+    
     return { success: true, groupId: newGroupRef.key, data: group };
   } catch (error) {
     console.error('Error creating group:', error);
+    console.groupEnd();
     return { success: false, error: error.message };
   }
 };
@@ -400,36 +688,809 @@ export const getGroup = async (groupId) => {
 };
 
 /**
- * Join a group
+ * Join a group (public groups only - immediate membership)
+ * Uses atomic multi-path update: members + userGroups + memberCount
  * @param {string} groupId - Group ID
  * @param {string} uid - User ID
  */
 export const joinGroup = async (groupId, uid) => {
   try {
-    const groupRef = ref(database, `groups/${groupId}/members/${uid}`);
-    await set(groupRef, {
+    console.group('JOIN GROUP');
+    console.log('GroupId:', groupId, 'UserId:', uid);
+    
+    // Check if group exists and is public
+    const groupResult = await getGroup(groupId);
+    if (!groupResult.success) {
+      console.error('Group not found');
+      console.groupEnd();
+      return { success: false, error: 'Group not found' };
+    }
+    
+    const group = groupResult.data;
+    if (group.privacy === 'private') {
+      console.error('Cannot directly join private group. Use requestGroupJoin instead.');
+      console.groupEnd();
+      return { success: false, error: 'Cannot directly join private group. Please request to join.' };
+    }
+    
+    // Check if already a member
+    if (group.members && group.members[uid]) {
+      console.log('User is already a member');
+      console.groupEnd();
+      return { success: true, message: 'Already a member' };
+    }
+    
+    // Prepare atomic multi-path update
+    const updates = {};
+    const memberData = {
       role: 'member',
       joinedAt: new Date().toISOString()
+    };
+    
+    updates[`groups/${groupId}/members/${uid}`] = memberData;
+    updates[`userGroups/${uid}/${groupId}`] = true;
+    
+    // Perform atomic update first (members + userGroups)
+    await update(ref(database), updates);
+    
+    // Use transaction to increment memberCount atomically (after member add)
+    const memberCountRef = ref(database, `groups/${groupId}/memberCount`);
+    const memberCountResult = await runTransaction(memberCountRef, (current) => {
+      // If current is null or undefined, start at 1 (including the new member)
+      // If it exists, increment it
+      return (current || 0) + 1;
     });
+    
+    if (!memberCountResult.committed) {
+      console.error('Failed to update memberCount, but member was added');
+      // Member was already added, but count update failed
+      // This is acceptable - count can be recalculated
+      console.groupEnd();
+      return { success: true, warning: 'Member added but count update failed' };
+    }
+    
+    console.log('Successfully joined group');
+    console.log('Member count:', memberCountResult.snapshot.val());
+    console.groupEnd();
+    
     return { success: true };
   } catch (error) {
     console.error('Error joining group:', error);
+    console.groupEnd();
     return { success: false, error: error.message };
   }
 };
 
 /**
  * Leave a group
+ * Uses atomic multi-path update: remove from members + userGroups + decrement memberCount
  * @param {string} groupId - Group ID
  * @param {string} uid - User ID
  */
 export const leaveGroup = async (groupId, uid) => {
   try {
-    const memberRef = ref(database, `groups/${groupId}/members/${uid}`);
-    await remove(memberRef);
+    console.group('LEAVE GROUP');
+    console.log('GroupId:', groupId, 'UserId:', uid);
+    
+    // Check if user is a member
+    const groupResult = await getGroup(groupId);
+    if (!groupResult.success) {
+      console.error('Group not found');
+      console.groupEnd();
+      return { success: false, error: 'Group not found' };
+    }
+    
+    const group = groupResult.data;
+    if (!group.members || !group.members[uid]) {
+      console.log('User is not a member');
+      console.groupEnd();
+      return { success: true, message: 'Not a member' };
+    }
+    
+    // Prepare atomic multi-path update
+    const updates = {};
+    updates[`groups/${groupId}/members/${uid}`] = null;
+    updates[`userGroups/${uid}/${groupId}`] = null;
+    
+    // Perform atomic update first (remove member + userGroups)
+    await update(ref(database), updates);
+    
+    // Use transaction to decrement memberCount atomically (after member remove)
+    const memberCountRef = ref(database, `groups/${groupId}/memberCount`);
+    const memberCountResult = await runTransaction(memberCountRef, (current) => {
+      const currentCount = current || (group.members ? Object.keys(group.members).length : 0);
+      const newCount = Math.max(0, currentCount - 1);
+      return newCount;
+    });
+    
+    if (!memberCountResult.committed) {
+      console.error('Failed to update memberCount, but member was removed');
+      // Member was already removed, but count update failed
+      // This is acceptable - count can be recalculated
+      console.groupEnd();
+      return { success: true, warning: 'Member removed but count update failed' };
+    }
+    
+    console.log('Successfully left group');
+    console.log('Member count:', memberCountResult.snapshot.val());
+    console.groupEnd();
+    
     return { success: true };
   } catch (error) {
     console.error('Error leaving group:', error);
+    console.groupEnd();
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Update group fields
+ * @param {string} groupId - Group ID
+ * @param {object} updates - Fields to update (name, description, category, privacy, banner, icon)
+ */
+export const updateGroup = async (groupId, updates) => {
+  try {
+    console.group('UPDATE GROUP');
+    console.log('GroupId:', groupId, 'Updates:', updates);
+    
+    // Import validation utilities
+    const { 
+      validateGroupName, 
+      validateGroupDescription, 
+      validateGroupCategory, 
+      validateGroupPrivacy,
+      sanitizeText
+    } = await import('../utils/sanitize');
+    
+    // Only update provided fields with validation
+    const updateData = {};
+    
+    if (updates.name !== undefined) {
+      const nameValidation = validateGroupName(updates.name);
+      if (!nameValidation.valid) {
+        console.error('Name validation error:', nameValidation.error);
+        console.groupEnd();
+        return { success: false, error: nameValidation.error };
+      }
+      updateData.name = updates.name.trim();
+    }
+    
+    if (updates.description !== undefined) {
+      const descValidation = validateGroupDescription(updates.description);
+      if (!descValidation.valid) {
+        console.error('Description validation error:', descValidation.error);
+        console.groupEnd();
+        return { success: false, error: descValidation.error };
+      }
+      updateData.description = sanitizeText(updates.description.trim());
+    }
+    
+    if (updates.category !== undefined) {
+      const categoryValidation = validateGroupCategory(updates.category);
+      if (!categoryValidation.valid) {
+        console.error('Category validation error:', categoryValidation.error);
+        console.groupEnd();
+        return { success: false, error: categoryValidation.error };
+      }
+      updateData.category = updates.category;
+    }
+    
+    if (updates.privacy !== undefined) {
+      const privacyValidation = validateGroupPrivacy(updates.privacy);
+      if (!privacyValidation.valid) {
+        console.error('Privacy validation error:', privacyValidation.error);
+        console.groupEnd();
+        return { success: false, error: privacyValidation.error };
+      }
+      updateData.privacy = updates.privacy;
+    }
+    
+    if (updates.banner !== undefined) updateData.banner = updates.banner;
+    if (updates.icon !== undefined) updateData.icon = updates.icon;
+    
+    const groupRef = ref(database, `groups/${groupId}`);
+    await update(groupRef, updateData);
+    
+    console.log('Successfully updated group');
+    console.groupEnd();
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating group:', error);
+    console.groupEnd();
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Delete a group and all related data
+ * @param {string} groupId - Group ID
+ */
+export const deleteGroup = async (groupId) => {
+  try {
+    console.group('DELETE GROUP');
+    console.log('GroupId:', groupId);
+    
+    // Get group to clean up userGroups index
+    const groupResult = await getGroup(groupId);
+    if (!groupResult.success) {
+      console.error('Group not found');
+      console.groupEnd();
+      return { success: false, error: 'Group not found' };
+    }
+    
+    const group = groupResult.data;
+    
+    // Delete all posts in this group first
+    const postsRef = ref(database, 'posts');
+    const postsSnapshot = await get(postsRef);
+    
+    if (postsSnapshot.exists()) {
+      const posts = postsSnapshot.val();
+      const deletePromises = [];
+      
+      for (const postId in posts) {
+        if (posts[postId].groupId === groupId) {
+          const postRef = ref(database, `posts/${postId}`);
+          deletePromises.push(remove(postRef));
+        }
+      }
+      
+      await Promise.all(deletePromises);
+      console.log('Deleted', deletePromises.length, 'posts');
+    }
+    
+    // Clean up userGroups index for all members
+    if (group.members) {
+      const userGroupUpdates = {};
+      Object.keys(group.members).forEach(uid => {
+        userGroupUpdates[`userGroups/${uid}/${groupId}`] = null;
+      });
+      
+      if (Object.keys(userGroupUpdates).length > 0) {
+        await update(ref(database), userGroupUpdates);
+        console.log('Cleaned up userGroups for', Object.keys(group.members).length, 'members');
+      }
+    }
+    
+    // Delete group node
+    const groupRef = ref(database, `groups/${groupId}`);
+    await remove(groupRef);
+    
+    console.log('Successfully deleted group');
+    console.groupEnd();
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting group:', error);
+    console.groupEnd();
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Approve a member join request and add to members
+ * Uses atomic multi-path update: members + userGroups + memberCount + update request status + notifications
+ * @param {string} groupId - Group ID
+ * @param {string} requestId - Request ID (typically userId)
+ * @param {string} userId - User ID (for backwards compatibility, can use requestId)
+ */
+export const approveMemberRequest = async (groupId, requestId, userId = null) => {
+  try {
+    console.group('APPROVE MEMBER REQUEST');
+    const actualUserId = userId || requestId;
+    console.log('GroupId:', groupId, 'RequestId:', requestId, 'UserId:', actualUserId);
+    
+    // Get group and request data
+    const groupResult = await getGroup(groupId);
+    if (!groupResult.success) {
+      console.error('Group not found');
+      console.groupEnd();
+      return { success: false, error: 'Group not found' };
+    }
+    
+    const group = groupResult.data;
+    
+    // Check if request exists
+    const requestsRef = ref(database, `groups/${groupId}/requests/${requestId}`);
+    const requestSnapshot = await get(requestsRef);
+    
+    if (!requestSnapshot.exists()) {
+      console.error('Request not found');
+      console.groupEnd();
+      return { success: false, error: 'Request not found' };
+    }
+    
+    const requestData = requestSnapshot.val();
+    
+    // Check if already a member (race condition protection)
+    if (group.members && group.members[actualUserId]) {
+      console.log('User is already a member, removing request');
+      // Still update request status and notify
+      await update(requestsRef, { status: 'accepted' });
+      
+      // Get user for notification
+      const userResult = await getUser(actualUserId);
+      const username = userResult.success ? (userResult.data.profile?.username || userResult.data.username || 'User') : 'User';
+      
+      // Notify requester
+      await createNotification(actualUserId, {
+        type: 'group_request_response',
+        groupId: groupId,
+        requestId: requestId,
+        message: `Your request to join ${group.name} was accepted.`,
+        read: false
+      });
+      
+      console.groupEnd();
+      return { success: true, message: 'Already a member' };
+    }
+    
+    // Check if request status is pending (prevent double-approval)
+    if (requestData.status && requestData.status !== 'pending') {
+      console.error('Request already processed:', requestData.status);
+      console.groupEnd();
+      return { success: false, error: `Request already ${requestData.status}` };
+    }
+    
+    // Prepare atomic multi-path update
+    const updates = {};
+    const memberData = {
+      role: 'member',
+      joinedAt: new Date().toISOString()
+    };
+    
+    updates[`groups/${groupId}/members/${actualUserId}`] = memberData;
+    updates[`userGroups/${actualUserId}/${groupId}`] = true;
+    updates[`groups/${groupId}/requests/${requestId}/status`] = 'accepted';
+    // Also remove from new schema: groupRequests/{groupId}/{userId}
+    updates[`groupRequests/${groupId}/${actualUserId}`] = null;
+    
+    // Perform atomic update first (members + userGroups + request status + remove from new schema)
+    await update(ref(database), updates);
+    
+    // Use transaction to increment memberCount atomically (after member add)
+    const memberCountRef = ref(database, `groups/${groupId}/memberCount`);
+    const memberCountResult = await runTransaction(memberCountRef, (current) => {
+      return (current || 0) + 1;
+    });
+    
+    if (!memberCountResult.committed) {
+      console.error('Failed to update memberCount, but member was added');
+      // Member was already added, but count update failed
+      // This is acceptable - count can be recalculated
+      console.groupEnd();
+      return { success: true, warning: 'Member added but count update failed' };
+    }
+    
+    // Get user data for notifications
+    const userResult = await getUser(actualUserId);
+    const username = userResult.success ? (userResult.data.profile?.username || userResult.data.username || 'User') : 'User';
+    
+    // Notify requester
+    await createNotification(actualUserId, {
+      type: 'group_request_response',
+      groupId: groupId,
+      requestId: requestId,
+      message: `Your request to join ${group.name} was accepted.`,
+      read: false
+    });
+    
+    // Mark admin notifications as read (optional - find and mark all related notifications)
+    // This would require querying notifications, which is handled in the UI
+    
+    console.log('Successfully approved request');
+    console.log('Member count:', memberCountResult.snapshot.val());
+    console.groupEnd();
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error approving member request:', error);
+    console.groupEnd();
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Remove a member from group
+ * @param {string} groupId - Group ID
+ * @param {string} userId - User ID
+ */
+export const removeMember = async (groupId, userId) => {
+  try {
+    console.group('REMOVE MEMBER');
+    console.log('GroupId:', groupId, 'UserId:', userId);
+    
+    // Get group to check if member exists
+    const groupResult = await getGroup(groupId);
+    if (!groupResult.success) {
+      console.error('Group not found');
+      console.groupEnd();
+      return { success: false, error: 'Group not found' };
+    }
+    
+    const group = groupResult.data;
+    if (!group.members || !group.members[userId]) {
+      console.log('User is not a member');
+      console.groupEnd();
+      return { success: true, message: 'Not a member' };
+    }
+    
+    // Prepare atomic multi-path update
+    const updates = {};
+    updates[`groups/${groupId}/members/${userId}`] = null;
+    updates[`userGroups/${userId}/${groupId}`] = null;
+    
+    // Also remove from admins if they were an admin
+    if (group.admins && group.admins[userId]) {
+      updates[`groups/${groupId}/admins/${userId}`] = null;
+    }
+    
+    // Perform atomic update first
+    await update(ref(database), updates);
+    
+    // Use transaction to decrement memberCount atomically
+    const memberCountRef = ref(database, `groups/${groupId}/memberCount`);
+    const memberCountResult = await runTransaction(memberCountRef, (current) => {
+      const currentCount = current || (group.members ? Object.keys(group.members).length : 0);
+      const newCount = Math.max(0, currentCount - 1);
+      return newCount;
+    });
+    
+    if (!memberCountResult.committed) {
+      console.error('Failed to update memberCount, but member was removed');
+      console.groupEnd();
+      return { success: true, warning: 'Member removed but count update failed' };
+    }
+    
+    console.log('Successfully removed member');
+    console.log('Member count:', memberCountResult.snapshot.val());
+    console.groupEnd();
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error removing member:', error);
+    console.groupEnd();
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Promote a member to admin
+ * @param {string} groupId - Group ID
+ * @param {string} userId - User ID
+ */
+export const promoteToAdmin = async (groupId, userId) => {
+  try {
+    // Update member role to admin
+    const memberRef = ref(database, `groups/${groupId}/members/${userId}/role`);
+    await set(memberRef, 'admin');
+    
+    // Add to admins object
+    const adminRef = ref(database, `groups/${groupId}/admins/${userId}`);
+    await set(adminRef, true);
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error promoting to admin:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Get pending join requests for a group
+ * @param {string} groupId - Group ID
+ */
+export const getGroupMemberRequests = async (groupId) => {
+  try {
+    const requestsRef = ref(database, `groups/${groupId}/requests`);
+    const snapshot = await get(requestsRef);
+    
+    if (snapshot.exists()) {
+      const requests = snapshot.val();
+      // Filter to only pending requests
+      const pendingRequests = {};
+      Object.keys(requests).forEach(requestId => {
+        if (requests[requestId].status === 'pending' || !requests[requestId].status) {
+          pendingRequests[requestId] = requests[requestId];
+        }
+      });
+      return { success: true, data: pendingRequests };
+    }
+    
+    return { success: true, data: {} };
+  } catch (error) {
+    console.error('Error getting group member requests:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Get group requests from new schema: groupRequests/{groupId}
+ * @param {string} groupId - Group ID
+ */
+export const getGroupRequests = async (groupId) => {
+  try {
+    const requestsRef = ref(database, `groupRequests/${groupId}`);
+    const snapshot = await get(requestsRef);
+    
+    if (snapshot.exists()) {
+      const requests = snapshot.val();
+      // Return object with userId as keys
+      return { success: true, data: requests };
+    }
+    
+    return { success: true, data: {} };
+  } catch (error) {
+    console.error('Error getting group requests:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Request to join a private group
+ * Creates a request node and notifies all group admins
+ * @param {string} groupId - Group ID
+ * @param {string} uid - User ID
+ */
+export const requestGroupJoin = async (groupId, uid) => {
+  try {
+    console.group('REQUEST GROUP JOIN');
+    console.log('GroupId:', groupId, 'UserId:', uid);
+    
+    // Check if group exists and is private
+    const groupResult = await getGroup(groupId);
+    if (!groupResult.success) {
+      console.error('Group not found');
+      console.groupEnd();
+      return { success: false, error: 'Group not found' };
+    }
+    
+    const group = groupResult.data;
+    if (group.privacy === 'public') {
+      console.error('Group is public. Use joinGroup instead.');
+      console.groupEnd();
+      return { success: false, error: 'Group is public. Use Join button instead.' };
+    }
+    
+    // Check if already a member
+    if (group.members && group.members[uid]) {
+      console.log('User is already a member');
+      console.groupEnd();
+      return { success: false, error: 'Already a member of this group' };
+    }
+    
+    // Check for existing pending request (rate limiting)
+    const requestsRef = ref(database, `groups/${groupId}/requests/${uid}`);
+    const existingRequestSnapshot = await get(requestsRef);
+    
+    if (existingRequestSnapshot.exists()) {
+      const existingRequest = existingRequestSnapshot.val();
+      
+      // Check if request is pending
+      if (existingRequest.status === 'pending' || !existingRequest.status) {
+        console.log('Request already pending');
+        console.groupEnd();
+        return { success: false, error: 'Request already pending' };
+      }
+      
+      // Check rate limit (1 request per 10 seconds)
+      if (existingRequest.createdAt) {
+        const requestTime = new Date(existingRequest.createdAt).getTime();
+        const now = Date.now();
+        const timeSinceRequest = (now - requestTime) / 1000;
+        
+        if (timeSinceRequest < 10) {
+          const waitTime = Math.ceil(10 - timeSinceRequest);
+          console.error(`Rate limit: Please wait ${waitTime} seconds before requesting again`);
+          console.groupEnd();
+          return { success: false, error: `Please wait ${waitTime} seconds before requesting again` };
+        }
+      }
+    }
+    
+    // Get user data for notification
+    const userResult = await getUser(uid);
+    const username = userResult.success ? (userResult.data.profile?.username || userResult.data.username || 'User') : 'User';
+    
+    // Create request
+    const requestData = {
+      userId: uid,
+      createdAt: new Date().toISOString(),
+      status: 'pending'
+    };
+    
+    // Store in both locations for compatibility
+    await set(requestsRef, requestData);
+    
+    // Also store in new schema: groupRequests/{groupId}/{userId}
+    const newRequestsRef = ref(database, `groupRequests/${groupId}/${uid}`);
+    await set(newRequestsRef, true);
+    
+    // Notify all admins
+    const admins = group.admins || {};
+    if (Object.keys(admins).length === 0 && group.creatorId) {
+      // Fallback to creator if no admins object
+      admins[group.creatorId] = true;
+    }
+    
+    const notificationPromises = Object.keys(admins).map(async (adminId) => {
+      await createNotification(adminId, {
+        type: 'group_request',
+        fromUserId: uid,
+        groupId: groupId,
+        requestId: uid,
+        message: `${username} requested to join ${group.name}`,
+        read: false
+      });
+    });
+    
+    await Promise.all(notificationPromises);
+    
+    console.log('Successfully created join request');
+    console.log('Notified', Object.keys(admins).length, 'admin(s)');
+    console.groupEnd();
+    
+    return { success: true, requestId: uid };
+  } catch (error) {
+    console.error('Error requesting to join group:', error);
+    console.groupEnd();
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Cancel a pending join request
+ * @param {string} groupId - Group ID
+ * @param {string} requestId - Request ID (typically userId)
+ * @param {string} uid - User ID (must match request userId)
+ */
+export const cancelGroupRequest = async (groupId, requestId, uid) => {
+  try {
+    console.group('CANCEL GROUP REQUEST');
+    console.log('GroupId:', groupId, 'RequestId:', requestId, 'UserId:', uid);
+    
+    // Verify request exists and belongs to user
+    const requestRef = ref(database, `groups/${groupId}/requests/${requestId}`);
+    const requestSnapshot = await get(requestRef);
+    
+    if (!requestSnapshot.exists()) {
+      console.error('Request not found');
+      console.groupEnd();
+      return { success: false, error: 'Request not found' };
+    }
+    
+    const requestData = requestSnapshot.val();
+    
+    if (requestData.userId !== uid) {
+      console.error('Request does not belong to user');
+      console.groupEnd();
+      return { success: false, error: 'Unauthorized' };
+    }
+    
+    if (requestData.status && requestData.status !== 'pending') {
+      console.error('Request already processed:', requestData.status);
+      console.groupEnd();
+      return { success: false, error: `Cannot cancel ${requestData.status} request` };
+    }
+    
+    // Update request status to cancelled
+    await update(requestRef, { status: 'cancelled' });
+    
+    // Also remove from new schema: groupRequests/{groupId}/{userId}
+    const newRequestsRef = ref(database, `groupRequests/${groupId}/${uid}`);
+    await remove(newRequestsRef);
+    
+    // Note: Admin notifications can remain - they'll see it as cancelled
+    // In a production system, you might want to notify admins or mark notifications
+    
+    console.log('Successfully cancelled request');
+    console.groupEnd();
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error cancelling group request:', error);
+    console.groupEnd();
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Reject a member join request
+ * Updates request status and notifies requester
+ * @param {string} groupId - Group ID
+ * @param {string} requestId - Request ID (typically userId)
+ * @param {string} userId - User ID (for backwards compatibility)
+ */
+export const rejectMemberRequest = async (groupId, requestId, userId = null) => {
+  try {
+    console.group('REJECT MEMBER REQUEST');
+    const actualUserId = userId || requestId;
+    console.log('GroupId:', groupId, 'RequestId:', requestId, 'UserId:', actualUserId);
+    
+    // Get group and request data
+    const groupResult = await getGroup(groupId);
+    if (!groupResult.success) {
+      console.error('Group not found');
+      console.groupEnd();
+      return { success: false, error: 'Group not found' };
+    }
+    
+    const group = groupResult.data;
+    
+    // Check if request exists
+    const requestsRef = ref(database, `groups/${groupId}/requests/${requestId}`);
+    const requestSnapshot = await get(requestsRef);
+    
+    if (!requestSnapshot.exists()) {
+      console.error('Request not found');
+      console.groupEnd();
+      return { success: false, error: 'Request not found' };
+    }
+    
+    const requestData = requestSnapshot.val();
+    
+    // Check if request status is pending
+    if (requestData.status && requestData.status !== 'pending') {
+      console.error('Request already processed:', requestData.status);
+      console.groupEnd();
+      return { success: false, error: `Request already ${requestData.status}` };
+    }
+    
+    // Update request status
+    await update(requestsRef, { status: 'rejected' });
+    
+    // Also remove from new schema: groupRequests/{groupId}/{userId}
+    const newRequestsRef = ref(database, `groupRequests/${groupId}/${actualUserId}`);
+    await remove(newRequestsRef);
+    
+    // Notify requester
+    await createNotification(actualUserId, {
+      type: 'group_request_response',
+      groupId: groupId,
+      requestId: requestId,
+      message: `Your request to join ${group.name} was rejected.`,
+      read: false
+    });
+    
+    console.log('Successfully rejected request');
+    console.groupEnd();
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error rejecting member request:', error);
+    console.groupEnd();
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Get groups that a user is a member of
+ * @param {string} uid - User ID
+ */
+export const getUserGroups = async (uid) => {
+  try {
+    const userGroupsRef = ref(database, `userGroups/${uid}`);
+    const snapshot = await get(userGroupsRef);
+    
+    if (snapshot.exists()) {
+      const userGroups = snapshot.val();
+      const groupIds = Object.keys(userGroups);
+      
+      // Fetch group details for each group
+      const groupPromises = groupIds.map(groupId => getGroup(groupId));
+      const groupResults = await Promise.all(groupPromises);
+      
+      const groups = groupResults
+        .filter(result => result.success)
+        .map(result => result.data);
+      
+      return { success: true, data: groups };
+    }
+    
+    return { success: true, data: [] };
+  } catch (error) {
+    console.error('Error getting user groups:', error);
     return { success: false, error: error.message };
   }
 };
