@@ -4,13 +4,17 @@
     justify-content: flex-start;
     min-height: auto;
     background-color: white;
-    margin-bottom: 20px;
+    margin-top: 16px;
+    margin-bottom: 16px;
     border-radius: 16px;
     border: 1px solid #e0e0e0;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     transition: box-shadow 0.3s ease, transform 0.2s ease;
-    padding: 24px;
+    padding: 14px 16px;
     overflow: hidden;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 .post:first-child{
     margin-top: 0;
@@ -22,6 +26,7 @@
 .post .userprofile{
     margin: 0;
     width: 100%;
+    max-width: 100%;
     height: auto;
     display: flex;
     flex-direction: row;
@@ -29,6 +34,8 @@
     text-align: center;
     background-color: transparent;
     margin-bottom: 12px;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 .post .userprofile .userdetials{
     width: 60%;
@@ -55,9 +62,19 @@
     background-color: transparent;
     display: flex;
     justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
 }
 .post .userprofile .user{
     align-self: center;
+}
+.post .userprofile .img .user-profile-pic{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 100%;
+    display: block;
 }
 .post .userprofile .followbtn{
     align-self: center;
@@ -112,22 +129,35 @@
     min-height: auto;
     border-top: 1px solid #e0e0e0;
     margin-top: 16px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 .postcontent h3{
     margin: 0 0 12px 0;
-    font-size: 20px;
+    font-size: 18px;
     line-height: 1.5;
     color: #333;
     font-weight: 600;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
 }
 
 .post-text {
     margin: 0 0 16px 0;
-    font-size: 15px;
+    font-size: 14px;
     line-height: 1.7;
     color: #555;
     word-wrap: break-word;
     overflow-wrap: break-word;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .postcontent .lenans{
@@ -174,14 +204,19 @@
     gap: 16px;
     margin: 16px 0;
     width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .post-media-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 12px;
     width: 100%;
     max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .post-media-item {
@@ -284,6 +319,11 @@
     margin-top: 16px;
     padding-top: 16px;
     border-top: 1px solid #f0f0f0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    flex-wrap: wrap;
 }
 
 .post-actions .lenans {

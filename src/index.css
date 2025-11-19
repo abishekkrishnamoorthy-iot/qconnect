@@ -181,6 +181,74 @@ code {
   background-color: #8a5608;
 }
 
+/* Google Login Styles for Signup Page */
+.signuppanel .login-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 20px 30px;
+  color: #463804;
+  font-weight: 500;
+}
+
+.signuppanel .login-divider::before,
+.signuppanel .login-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #f99806;
+}
+
+.signuppanel .login-divider span {
+  padding: 0 15px;
+  font-size: 14px;
+}
+
+.signuppanel .google-login-container {
+  padding: 0 30px 30px 30px;
+  display: flex;
+  justify-content: center;
+}
+
+.signuppanel .google-login-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 80%;
+  padding: 12px 20px;
+  border: 2px solid #4285F4;
+  border-radius: 20px;
+  background-color: white;
+  color: #4285F4;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.signuppanel .google-login-button:hover:not(:disabled) {
+  background-color: #f8f9fa;
+  border-color: #357ae8;
+  color: #357ae8;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(66, 133, 244, 0.2);
+}
+
+.signuppanel .google-login-button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(66, 133, 244, 0.2);
+}
+
+.signuppanel .google-login-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.signuppanel .google-icon {
+  flex-shrink: 0;
+}
+
 .dash{
   background-color: #F8F4EC;
   width: 100%;
@@ -280,9 +348,11 @@ code {
   flex-direction: row;
   height: 90vh;
   overflow-y: hidden;
+  overflow-x: hidden;
   justify-content: center;
   gap: 20px;
   padding: 20px;
+  box-sizing: border-box;
 }
  .dashcon .grppanel{
   display: flex;
@@ -295,24 +365,16 @@ code {
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   overflow-y: auto;
+  overflow-x: hidden;
+  /* Hide scrollbar for Firefox */
+  scrollbar-width: none;
+  /* Hide scrollbar for IE and Edge */
+  -ms-overflow-style: none;
 }
 
-/* Custom Scrollbar for Sidebar */
+/* Hide scrollbar for Chrome, Safari and Opera */
 .dashcon .grppanel::-webkit-scrollbar {
-  width: 6px;
-}
-
-.dashcon .grppanel::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.dashcon .grppanel::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 3px;
-}
-
-.dashcon .grppanel::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.3);
+  display: none;
 }
  .dashcon .grppanel .grppanelheader{
   display: flex;
@@ -352,9 +414,20 @@ code {
   width: 45%;
   max-width: 700px;
   height: 85vh;
+  padding: 0;
   padding-bottom: 2px;
   background-color: transparent;
   overflow-y: scroll;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.dashcon .postbox::-webkit-scrollbar {
+  display: none;
 }
  .dashcon .trending-groups{
   display: flex;
@@ -367,6 +440,16 @@ code {
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   overflow-y: auto;
+  overflow-x: hidden;
+  /* Hide scrollbar for Firefox */
+  scrollbar-width: none;
+  /* Hide scrollbar for IE and Edge */
+  -ms-overflow-style: none;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.dashcon .trending-groups::-webkit-scrollbar {
+  display: none;
 }
 
 /* Group Item Styles */
@@ -483,7 +566,37 @@ button.create-group-link {
   padding: 10px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 16px;
+}
+
+/* Group cards in trending list sidebar */
+.trending-list .group-card {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+}
+
+.trending-list .group-card-banner {
+  height: 100px;
+}
+
+.trending-list .group-card-icon {
+  width: 50px;
+  height: 50px;
+  margin: -25px auto 8px auto;
+}
+
+.trending-list .group-card-title {
+  font-size: 16px;
+}
+
+.trending-list .group-card-meta {
+  font-size: 12px;
+}
+
+.trending-list .group-card-desc {
+  font-size: 12px;
+  padding: 0 8px;
 }
 
 .trending-item {

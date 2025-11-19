@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { deletePost, followUser, unfollowUser, isFollowing } from '../../services/db'
+import LikeButton from '../common/LikeButton'
 
 const Post = ({ post, postid, onDelete }) => {
   const { currentUser } = useAuth()
@@ -70,7 +71,27 @@ const Post = ({ post, postid, onDelete }) => {
     <div className='post'>
        <div className="userprofile">
          <div className="img">
-           <FontAwesomeIcon icon="fa-solid fa-user" size='xl' className='user'/>
+           {post.userProfilePic ? (
+             <img 
+               src={post.userProfilePic} 
+               alt={post.username || 'User'} 
+               className="user-profile-pic"
+               onError={(e) => {
+                 // Fallback to icon if image fails to load
+                 e.target.style.display = 'none';
+                 const iconElement = e.target.parentElement.querySelector('.user');
+                 if (iconElement) {
+                   iconElement.style.display = 'flex';
+                 }
+               }}
+             />
+           ) : null}
+           <FontAwesomeIcon 
+             icon="fa-solid fa-user" 
+             size='xl' 
+             className='user'
+             style={{ display: post.userProfilePic ? 'none' : 'flex' }}
+           />
          </div> 
          <div className="userdetials">
           <h5>{post.username || 'Unknown'}</h5>
@@ -161,6 +182,7 @@ const Post = ({ post, postid, onDelete }) => {
            )}
            
            <div className="post-actions">
+             <LikeButton post={post} />
              <Link to={`/home/${post._id}`} className='lenans'>
                {answerCount === 0 ? "No Answers" : `${answerCount} ${answerCount === 1 ? 'Answer' : 'Answers'}`}
              </Link>

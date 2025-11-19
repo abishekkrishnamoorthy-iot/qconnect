@@ -12,7 +12,7 @@
     text-decoration: none;
   }
     .dashnav ul .text{
-    width: 20%;
+    width: 33.33%;
     margin-right:10px;
     padding-bottom:10px;
     display: flex;
@@ -22,11 +22,16 @@
     cursor: pointer;  
     font-size: larger;
     font-weight: bolder;
+    transition: all 0.3s ease;
   }
   .text{
     color: #463804;
   }
    .dashnav ul  .text:hover{
+    color: #f99806;
+    border-bottom: 5px solid #f99806;
+  }
+  .dashnav ul .text.active{
     color: #f99806;
     border-bottom: 5px solid #f99806;
   }

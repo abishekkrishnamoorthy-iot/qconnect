@@ -22,6 +22,7 @@
     "fs": "^0.0.1-security",
     "lodash": "^4.17.21",
     "mdb-react-ui-kit": "^7.2.0",
+    "openai": "^6.9.1",
     "postinstall": "^0.9.0",
     "react": "^18.3.1",
     "react-copy-to-clipboard": "^5.1.0",

@@ -7,14 +7,17 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Qpost from '../components/profilepage/Qpost';
 import Qzpost from '../components/profilepage/Qzpost';
 import { useAuth } from '../context/AuthContext';
-import { getPosts, getQuizzes } from '../services/db';
+import { getPosts, getQuizzes, getGroups } from '../services/db';
+import GroupManageModal from '../components/profilepage/GroupManageModal';
 
 const Profilepage = ({cudetails, cupost}) => {
   const { currentUser, userData } = useAuth()
   const [activeButton, setActiveButton] = useState('question');
   const [userPosts, setUserPosts] = useState([])
   const [userQuizzes, setUserQuizzes] = useState([])
+  const [adminGroups, setAdminGroups] = useState([])
   const [loading, setLoading] = useState(true)
+  const [selectedGroup, setSelectedGroup] = useState(null)
 
   useEffect(() => {
     if (currentUser) {
@@ -40,11 +43,59 @@ const Profilepage = ({cudetails, cupost}) => {
       setUserQuizzes(userQuizzesList)
     }
 
+    // Load admin groups (groups created by user)
+    const groupsResult = await getGroups()
+    if (groupsResult.success) {
+      const adminGroupsList = groupsResult.data.filter(group => group.creatorId === currentUser.uid)
+      setAdminGroups(adminGroupsList)
+    }
+
     setLoading(false)
   }
 
   const handleButtonClick = (button) => {
     setActiveButton(button);
+  };
+
+  const handleGroupUpdated = () => {
+    loadUserContent();
+    setSelectedGroup(null);
+  };
+
+  const handleGroupDeleted = () => {
+    loadUserContent();
+    setSelectedGroup(null);
+  };
+
+  // Admin Group Card Component
+  const AdminGroupCard = ({ group, onManage }) => {
+    const memberCount = group.members ? Object.keys(group.members).length : 0;
+
+    return (
+      <div className='profile-admin-group-card'>
+        <img 
+          src={group.banner || '/default-banner.jpg'} 
+          className="profile-group-card-banner" 
+          alt={group.name}
+        />
+        <img 
+          src={group.icon || '/default-icon.png'} 
+          className="profile-group-card-icon" 
+          alt={group.name}
+        />
+        <div className="profile-group-card-title">{group.name}</div>
+        <div className="profile-group-card-meta">
+          {memberCount} {memberCount === 1 ? 'member' : 'members'} • {group.category} • {group.privacy}
+        </div>
+        <div className="profile-group-card-desc">{group.description}</div>
+        <button 
+          onClick={onManage}
+          className="profile-group-card-manage-button"
+        >
+          Manage
+        </button>
+      </div>
+    );
   };
 
   return (
@@ -140,6 +191,12 @@ const Profilepage = ({cudetails, cupost}) => {
               >
                 Quizzes
               </button>
+              <button
+                className={activeButton === 'groups' ? 'text active' : 'text'}
+                onClick={() => handleButtonClick('groups')}
+              >
+                Groups
+              </button>
             </ul>
           </div>
           {activeButton === 'question' && (
@@ -160,8 +217,34 @@ const Profilepage = ({cudetails, cupost}) => {
               <div>No quizzes created yet.</div>
             )
           )}
+          {activeButton === 'groups' && (
+            loading ? (
+              <div>Loading groups...</div>
+            ) : adminGroups.length > 0 ? (
+              <div className="admin-groups-list">
+                {adminGroups.map(group => (
+                  <AdminGroupCard 
+                    key={group._id} 
+                    group={group} 
+                    onManage={() => setSelectedGroup(group)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div>No admin groups yet.</div>
+            )
+          )}
         </div>
       </div>
+      
+      {selectedGroup && (
+        <GroupManageModal
+          group={selectedGroup}
+          onClose={() => setSelectedGroup(null)}
+          onGroupUpdated={handleGroupUpdated}
+          onGroupDeleted={handleGroupDeleted}
+        />
+      )}
     </div>
   )
 }

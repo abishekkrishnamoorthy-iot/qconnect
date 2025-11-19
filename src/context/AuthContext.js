@@ -4,7 +4,9 @@ import {
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
-  updateProfile
+  updateProfile,
+  GoogleAuthProvider,
+  signInWithPopup
 } from 'firebase/auth';
 import { auth } from '../firebase/config';
 import { ref, set, get } from 'firebase/database';
@@ -20,6 +22,8 @@ export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [authReady, setAuthReady] = useState(false);
+  const [profileLoaded, setProfileLoaded] = useState(false);
 
   // Sign up function
   const signup = async (email, password, username) => {
@@ -32,20 +36,62 @@ export const AuthProvider = ({ children }) => {
         displayName: username
       });
 
-      // Create user entry in Realtime Database
+      // Create user entry in Realtime Database (basic fields)
       const userRef = ref(database, `users/${user.uid}`);
       await set(userRef, {
         uid: user.uid,
-        username: username,
         email: email,
-        bio: '',
-        avatar: '',
         followerCount: 0,
         followingCount: 0,
         createdAt: new Date().toISOString()
       });
 
-      return { success: true, user };
+      // Create username index for fast lookup
+      const usernameIndexRef = ref(database, `usernames/${username}`);
+      await set(usernameIndexRef, user.uid);
+
+      // Create empty profile with firstLoginCompleted: false
+      const profileRef = ref(database, `users/${user.uid}/profile`);
+      await set(profileRef, {
+        username: username,
+        firstName: '',
+        description: '',
+        interests: [],
+        profilePic: '',
+        firstLoginCompleted: false,
+        updatedAt: new Date().toISOString()
+      });
+
+      // Fetch user data to return it and update context state
+      // We need to fetch manually since onAuthStateChanged might not have fired yet
+      // Reuse existing userRef and profileRef since they point to the same paths
+      const profileSnapshot = await get(profileRef);
+      const userSnapshot = await get(userRef);
+      
+      let fetchedUserData = null;
+      if (userSnapshot.exists()) {
+        fetchedUserData = userSnapshot.val();
+        if (profileSnapshot.exists()) {
+          fetchedUserData.profile = profileSnapshot.val();
+        }
+      }
+      
+      // Manually update context state to ensure it's available immediately
+      // This ensures OnboardingRoute has the data it needs
+      // Note: onAuthStateChanged will also fire and update state, but we do this
+      // to ensure state is available immediately after signup
+      setCurrentUser(user);
+      setAuthReady(true);
+      if (fetchedUserData) {
+        setUserData(fetchedUserData);
+        setProfileLoaded(true);
+      } else {
+        // If userData fetch failed, still set profileLoaded to prevent infinite loading
+        setProfileLoaded(true);
+      }
+      // Note: Don't set loading to false here - onAuthStateChanged will handle it
+
+      return { success: true, user, userData: fetchedUserData };
     } catch (error) {
       console.error('Signup error:', error);
       return { success: false, error: error.message };
@@ -88,6 +134,104 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Sign in with Google function
+  const signInWithGoogle = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      // Check if user exists in database
+      const userRef = ref(database, `users/${user.uid}`);
+      const userSnapshot = await get(userRef);
+
+      if (!userSnapshot.exists()) {
+        // First-time Google user - create user entry
+        const firstName = user.displayName ? user.displayName.split(' ')[0] : '';
+        
+        // Create user entry in Realtime Database
+        await set(userRef, {
+          uid: user.uid,
+          email: user.email,
+          followerCount: 0,
+          followingCount: 0,
+          createdAt: new Date().toISOString(),
+          authProvider: 'google'
+        });
+
+        // Create profile with auto-filled data from Google
+        const profileRef = ref(database, `users/${user.uid}/profile`);
+        await set(profileRef, {
+          username: '', // Empty initially, must be set in onboarding
+          firstName: firstName,
+          description: '',
+          interests: [],
+          profilePic: user.photoURL || '',
+          firstLoginCompleted: false,
+          updatedAt: new Date().toISOString()
+        });
+      } else {
+        // Returning user - update profile picture if changed
+        const userData = userSnapshot.val();
+        const profileRef = ref(database, `users/${user.uid}/profile`);
+        const profileSnapshot = await get(profileRef);
+        
+        if (profileSnapshot.exists()) {
+          const profile = profileSnapshot.val();
+          // Update profile picture if Google account has a new one
+          if (user.photoURL && user.photoURL !== profile.profilePic) {
+            await set(profileRef, {
+              ...profile,
+              profilePic: user.photoURL,
+              updatedAt: new Date().toISOString()
+            });
+          }
+        }
+
+        // Update authProvider if not set
+        if (!userData.authProvider) {
+          await set(userRef, {
+            ...userData,
+            authProvider: 'google'
+          });
+        }
+      }
+
+      // Fetch user data to return it
+      const fetchedUserData = await fetchUserData(user.uid);
+
+      return { success: true, user, userData: fetchedUserData };
+    } catch (error) {
+      console.error('Google sign-in error:', error);
+      
+      // Handle specific error cases
+      if (error.code === 'auth/popup-closed-by-user') {
+        // User closed popup - not really an error
+        return { success: false, error: null };
+      } else if (error.code === 'auth/account-exists-with-different-credential') {
+        return { 
+          success: false, 
+          error: 'An account with this email already exists. Please sign in with your password.' 
+        };
+      } else if (error.code === 'auth/popup-blocked') {
+        return { 
+          success: false, 
+          error: 'Popup was blocked. Please allow popups for this site and try again.' 
+        };
+      } else if (error.code === 'auth/network-request-failed') {
+        return { 
+          success: false, 
+          error: 'Network error. Please check your connection and try again.' 
+        };
+      } else {
+        return { 
+          success: false, 
+          error: error.message || 'Authentication failed. Please try again.' 
+        };
+      }
+    }
+  };
+
   // Sign out function
   const signOut = async () => {
     try {
@@ -103,12 +247,31 @@ export const AuthProvider = ({ children }) => {
   // Fetch user data from database
   const fetchUserData = async (uid) => {
     try {
-      const userRef = ref(database, `users/${uid}`);
-      const snapshot = await get(userRef);
+      // Check users/<uid>/profile first
+      const profileRef = ref(database, `users/${uid}/profile`);
+      const profileSnapshot = await get(profileRef);
       
-      if (snapshot.exists()) {
-        return snapshot.val();
+      // Check users/<uid> for root user data
+      const userRef = ref(database, `users/${uid}`);
+      const userSnapshot = await get(userRef);
+      
+      if (userSnapshot.exists()) {
+        const userData = userSnapshot.val();
+        
+        // Merge profile data if exists
+        if (profileSnapshot.exists()) {
+          userData.profile = profileSnapshot.val();
+        }
+        
+        // If this user matches currentUser, update state
+        if (currentUser && currentUser.uid === uid) {
+          setUserData(userData);
+          setProfileLoaded(true);
+        }
+        
+        return userData;
       }
+      
       return null;
     } catch (error) {
       console.error('Error fetching user data:', error);
@@ -119,16 +282,20 @@ export const AuthProvider = ({ children }) => {
   // Monitor auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setAuthReady(true);
       setCurrentUser(user);
       
       if (user) {
         // Fetch user data from database
         const data = await fetchUserData(user.uid);
         setUserData(data);
+        setProfileLoaded(true);
       } else {
         setUserData(null);
+        setProfileLoaded(true);
       }
       
+      // Only set loading to false after both auth is ready AND profile is loaded
       setLoading(false);
     });
 
@@ -140,9 +307,12 @@ export const AuthProvider = ({ children }) => {
     userData,
     signup,
     login,
+    signInWithGoogle,
     signOut,
     fetchUserData,
-    loading
+    loading,
+    authReady,
+    profileLoaded
   };
 
   return (
