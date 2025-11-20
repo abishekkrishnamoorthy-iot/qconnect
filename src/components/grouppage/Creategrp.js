@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useAuth } from '../../context/AuthContext';
 import { createGroup } from '../../services/db';
 import { uploadToCloudinary } from '../../utils/cloudinaryUpload';
+import '../../style/group/createGroupModal.css';
 
 const Creategrp = ({ onGroupCreated, onClose }) => {
-  const { currentUser, userData } = useAuth();
+  const { currentUser, userData, fetchUserData } = useAuth();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('Technology');
@@ -13,6 +14,8 @@ const Creategrp = ({ onGroupCreated, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [userDataLoading, setUserDataLoading] = useState(true);
+  const [localUserData, setLocalUserData] = useState(null);
   
   // Banner and icon state
   const [bannerFile, setBannerFile] = useState(null);
@@ -23,6 +26,45 @@ const Creategrp = ({ onGroupCreated, onClose }) => {
   
   const bannerInputRef = useRef(null);
   const iconInputRef = useRef(null);
+
+  // Fetch user data on mount
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (currentUser) {
+        setUserDataLoading(true);
+        try {
+          // Use fetchUserData from context if available, otherwise use userData
+          let fetchedData = userData;
+          if (fetchUserData && (!userData || !userData.profile)) {
+            fetchedData = await fetchUserData(currentUser.uid);
+          }
+          setLocalUserData(fetchedData);
+        } catch (err) {
+          console.error('Error loading user data:', err);
+          setLocalUserData(userData);
+        } finally {
+          setUserDataLoading(false);
+        }
+      } else {
+        setUserDataLoading(false);
+      }
+    };
+
+    loadUserData();
+  }, [currentUser, fetchUserData, userData]);
+
+  // Compute display values with proper fallbacks
+  const displayUsername = useMemo(() => {
+    if (userDataLoading) return '';
+    const data = localUserData || userData;
+    return data?.profile?.username || data?.username || currentUser?.displayName || 'Unknown User';
+  }, [localUserData, userData, currentUser, userDataLoading]);
+
+  const displayAvatar = useMemo(() => {
+    if (userDataLoading) return null;
+    const data = localUserData || userData;
+    return data?.profile?.profilePic || data?.profilePic || currentUser?.photoURL || null;
+  }, [localUserData, userData, currentUser, userDataLoading]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -238,10 +280,29 @@ const Creategrp = ({ onGroupCreated, onClose }) => {
         <div className="create-group-box">
           <div className="userprofile">
             <div className="img">
-              <FontAwesomeIcon icon="fa-solid fa-user" size="xl" className="user" />
+              {displayAvatar ? (
+                <img 
+                  src={displayAvatar} 
+                  alt={displayUsername} 
+                  className="user-avatar-img"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    const iconElement = e.target.parentElement.querySelector('.user');
+                    if (iconElement) {
+                      iconElement.style.display = 'flex';
+                    }
+                  }}
+                />
+              ) : null}
+              <FontAwesomeIcon 
+                icon="fa-solid fa-user" 
+                size="xl" 
+                className="user"
+                style={{ display: displayAvatar ? 'none' : 'flex' }}
+              />
             </div>
             <div className="userdetials">
-              <h5>{userData?.username || 'User'}</h5>
+              <h5>{userDataLoading ? 'Loading...' : displayUsername}</h5>
               <h6>Create a new group</h6>
             </div>
           </div>
@@ -276,7 +337,7 @@ const Creategrp = ({ onGroupCreated, onClose }) => {
                 maxLength={500}
                 rows="3"
               />
-              <div style={{ fontSize: '12px', color: '#666', textAlign: 'right', marginTop: '4px' }}>
+              <div className="char-count">
                 {description.length}/500
               </div>
             </div>
@@ -304,7 +365,7 @@ const Creategrp = ({ onGroupCreated, onClose }) => {
               <div className="form-group">
                 <label>Privacy: </label>
                 <div className="privacy-radio-group">
-                  <label className="privacy-radio">
+                  <label className={`privacy-radio ${privacy === 'public' ? 'checked' : ''}`}>
                     <input
                       type="radio"
                       value="public"
@@ -314,7 +375,7 @@ const Creategrp = ({ onGroupCreated, onClose }) => {
                     />
                     <span>Public</span>
                   </label>
-                  <label className="privacy-radio">
+                  <label className={`privacy-radio ${privacy === 'private' ? 'checked' : ''}`}>
                     <input
                       type="radio"
                       value="private"
@@ -324,7 +385,7 @@ const Creategrp = ({ onGroupCreated, onClose }) => {
                     />
                     <span>Private</span>
                   </label>
-                  <label className="privacy-radio">
+                  <label className={`privacy-radio ${privacy === 'restricted' ? 'checked' : ''}`}>
                     <input
                       type="radio"
                       value="restricted"
@@ -339,37 +400,23 @@ const Creategrp = ({ onGroupCreated, onClose }) => {
             </div>
 
             {/* Media Upload Section */}
-            <div className="form-group" style={{ marginTop: '20px' }}>
-              <label style={{ marginBottom: '12px', display: 'block' }}>Media</label>
+            <div className="form-group">
+              <label>Media</label>
               
-              <div className="form-row" style={{ gap: '20px', marginTop: '12px' }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: '14px', marginBottom: '8px', display: 'block' }}>Banner Image</label>
+              <div className="media-upload-container">
+                <div className="media-upload-item">
+                  <label>Banner Image</label>
                   {(bannerPreview || bannerFile) && (
-                    <div style={{ position: 'relative', marginBottom: '8px', borderRadius: '8px', overflow: 'hidden' }}>
+                    <div className="media-preview-container">
                       <img 
                         src={bannerPreview} 
                         alt="Banner preview" 
-                        style={{ width: '100%', maxHeight: '150px', objectFit: 'cover', borderRadius: '8px' }}
+                        className="banner-preview"
                       />
                       <button
                         type="button"
                         onClick={handleRemoveBanner}
-                        style={{
-                          position: 'absolute',
-                          top: '8px',
-                          right: '8px',
-                          background: 'rgba(0, 0, 0, 0.7)',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '50%',
-                          width: '28px',
-                          height: '28px',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}
+                        className="remove-media-btn"
                       >
                         <FontAwesomeIcon icon="fa-solid fa-times" />
                       </button>
@@ -379,18 +426,7 @@ const Creategrp = ({ onGroupCreated, onClose }) => {
                     type="button"
                     onClick={() => bannerInputRef.current?.click()}
                     disabled={loading || uploadingMedia}
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      border: '2px dashed #ddd',
-                      borderRadius: '8px',
-                      background: 'transparent',
-                      cursor: loading || uploadingMedia ? 'not-allowed' : 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px'
-                    }}
+                    className="upload-media-btn"
                   >
                     <FontAwesomeIcon icon="fa-solid fa-image" />
                     {bannerPreview ? 'Change Banner' : 'Upload Banner'}
@@ -404,33 +440,19 @@ const Creategrp = ({ onGroupCreated, onClose }) => {
                   />
                 </div>
 
-                <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: '14px', marginBottom: '8px', display: 'block' }}>Group Icon</label>
+                <div className="media-upload-item">
+                  <label>Group Icon</label>
                   {(iconPreview || iconFile) && (
-                    <div style={{ position: 'relative', marginBottom: '8px', width: '100px', height: '100px', margin: '0 auto' }}>
+                    <div className="icon-preview-container">
                       <img 
                         src={iconPreview} 
                         alt="Icon preview" 
-                        style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', border: '3px solid #ddd' }}
+                        className="icon-preview"
                       />
                       <button
                         type="button"
                         onClick={handleRemoveIcon}
-                        style={{
-                          position: 'absolute',
-                          top: '-8px',
-                          right: '-8px',
-                          background: 'rgba(0, 0, 0, 0.7)',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '50%',
-                          width: '28px',
-                          height: '28px',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}
+                        className="remove-media-btn"
                       >
                         <FontAwesomeIcon icon="fa-solid fa-times" />
                       </button>
@@ -440,18 +462,7 @@ const Creategrp = ({ onGroupCreated, onClose }) => {
                     type="button"
                     onClick={() => iconInputRef.current?.click()}
                     disabled={loading || uploadingMedia}
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      border: '2px dashed #ddd',
-                      borderRadius: '8px',
-                      background: 'transparent',
-                      cursor: loading || uploadingMedia ? 'not-allowed' : 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px'
-                    }}
+                    className="upload-media-btn"
                   >
                     <FontAwesomeIcon icon="fa-solid fa-image" />
                     {iconPreview ? 'Change Icon' : 'Upload Icon'}

@@ -439,28 +439,65 @@ export const getPost = async (postId) => {
  */
 export const deletePost = async (postId) => {
   try {
-    const postRef = ref(database, `posts/${postId}`);
-    await remove(postRef);
+    // Prepare multi-path update for atomic deletion
+    const updates = {};
     
-    // Also delete all answers for this post
+    // Delete the post itself
+    updates[`posts/${postId}`] = null;
+    
+    // Delete all answers for this post
     const answersRef = ref(database, `answers`);
     const answersSnapshot = await get(answersRef);
     if (answersSnapshot.exists()) {
       const answers = answersSnapshot.val();
-      const updates = {};
       Object.keys(answers).forEach(answerId => {
         if (answers[answerId].postId === postId) {
           updates[`answers/${answerId}`] = null;
         }
       });
-      if (Object.keys(updates).length > 0) {
-        await update(ref(database), updates);
-      }
+    }
+    
+    // Execute all deletions atomically
+    if (Object.keys(updates).length > 0) {
+      await update(ref(database), updates);
     }
     
     return { success: true };
   } catch (error) {
     console.error('Error deleting post:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Update a post
+ * @param {string} postId - Post ID
+ * @param {object} updates - Fields to update (title, text, description, topic, media, banner, questions)
+ * @returns {Promise<object>} { success: boolean, error?: string }
+ */
+export const updatePost = async (postId, updates) => {
+  try {
+    // Validate that only allowed fields are being updated
+    const allowedFields = ['title', 'text', 'description', 'topic', 'media', 'banner', 'questions', 'updatedAt'];
+    const updateData = {};
+    
+    // Only include allowed fields
+    Object.keys(updates).forEach(key => {
+      if (allowedFields.includes(key)) {
+        updateData[key] = updates[key];
+      }
+    });
+    
+    // Add updatedAt timestamp
+    updateData.updatedAt = Date.now();
+    
+    // Update the post
+    const postRef = ref(database, `posts/${postId}`);
+    await update(postRef, updateData);
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating post:', error);
     return { success: false, error: error.message };
   }
 };
