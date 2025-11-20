@@ -687,3 +687,222 @@ border-bottom: 5px solid #f99806;
     opacity: 1;
   }
 }
+
+/* Quiz banner in profile posts */
+.quiz-banner {
+  width: 100%;
+  max-height: 200px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.quiz-banner img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.quiz-description {
+  color: #666;
+  margin: 8px 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.quiz-meta {
+  margin: 8px 0;
+  color: #888;
+  font-size: 13px;
+}
+
+/* Profile-specific post card styles - professional layout */
+.probox .post {
+  width: 90%;
+  max-width: 900px;
+  padding: 16px 20px;
+  margin: 12px auto;
+  border-radius: 14px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.probox .post:first-child {
+  margin-top: 12px;
+}
+
+/* Header layout - flexbox with space-between */
+.probox .post .userprofile {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin: 0;
+  margin-bottom: 0;
+  padding: 0;
+}
+
+/* Left side: profile picture + user details */
+.probox .post .userprofile .userprofile-left {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex: 1;
+  gap: 12px;
+}
+
+.probox .post .userprofile .img {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.probox .post .userprofile .userdetials {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: auto;
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+  line-height: 1.4;
+}
+
+.probox .post .userprofile .userdetials h5 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.probox .post .userprofile .userdetials h6 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 400;
+  color: #666;
+}
+
+/* Right side: 3-dot menu */
+.probox .post .userprofile .deletebtn {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-shrink: 0;
+  width: auto;
+  margin: 0;
+  padding: 0;
+}
+
+/* Divider with proper spacing */
+.probox .post .postcontent {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 0 0 0;
+  margin-top: 12px;
+  border-top: 1px solid #e0e0e0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Question/Title text with proper spacing */
+.probox .post .postcontent h3 {
+  margin: 8px 0 12px 0;
+  padding: 0;
+  font-size: 18px;
+  line-height: 1.5;
+  color: #333;
+  font-weight: 600;
+  text-align: left;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+/* Buttons row - flexbox alignment */
+.probox .post .postcontent .post-actions-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-top: 8px;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.probox .post .postcontent .post-actions-row .lenans {
+  background-color: #f0f0f0;
+  color: #555;
+  padding: 8px 16px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: inline-block;
+}
+
+.probox .post .postcontent .post-actions-row .lenans:hover {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.probox .post .postcontent .post-actions-row .ansbtn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  background-color: #f9980695;
+  border: 1px solid #f99806;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.probox .post .postcontent .post-actions-row .ansbtn:hover {
+  background-color: #f99806;
+  border: none;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(249, 152, 6, 0.3);
+}
+
+/* Quiz-specific styles */
+.probox .post .quiz-banner {
+  width: 100%;
+  max-height: 200px;
+  overflow: hidden;
+  margin: 12px 0;
+  border-radius: 8px;
+}
+
+.probox .post .quiz-banner img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  display: block;
+}
+
+.probox .post .postcontent .quiz-description {
+  color: #666;
+  margin: 8px 0;
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.probox .post .postcontent .quiz-meta {
+  margin: 8px 0;
+  color: #888;
+  font-size: 13px;
+  text-align: left;
+}
+
+.probox .post:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  transform: translateY(-2px);
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
