@@ -45,14 +45,14 @@ clearCorruptedFirebaseData();
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyAMlp2h9oXgknTBOxizLhAJeGEIAtDZt-k",
-  authDomain: "qconnect-88535.firebaseapp.com",
-  databaseURL: "https://qconnect-88535-default-rtdb.firebaseio.com",
-  projectId: "qconnect-88535",
-  storageBucket: "qconnect-88535.firebasestorage.app",
-  messagingSenderId: "1005448923998",
-  appId: "1:1005448923998:web:11b17af6b2b9cea155ddcf",
-  measurementId: "G-1CGDL13XHV"
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY || "AIzaSyAMlp2h9oXgknTBOxizLhAJeGEIAtDZt-k",
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || "qconnect-88535.firebaseapp.com",
+  databaseURL: process.env.REACT_APP_FIREBASE_DATABASE_URL || "https://qconnect-88535-default-rtdb.firebaseio.com",
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID || "qconnect-88535",
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || "qconnect-88535.firebasestorage.app",
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || "1005448923998",
+  appId: process.env.REACT_APP_FIREBASE_APP_ID || "1:1005448923998:web:11b17af6b2b9cea155ddcf",
+  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID || "G-1CGDL13XHV"
 };
 
 // Initialize Firebase
