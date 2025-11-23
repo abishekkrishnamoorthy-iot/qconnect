@@ -9,12 +9,14 @@ const Dash = ({setid, qpost, setqpost, cudetails}) => {
     <div className='dash'>
       <Header/>
       <div className='dashcon'>
-        <Grouppanel/>
+        <div className="dashcon-left">
+          <TrendingGroups/>
+          <Grouppanel/>
+        </div>
         <Postpage setid={setid}
                   qpost={qpost}
                   setqpost={setqpost}
                   cudetails={cudetails}/>
-        <TrendingGroups/>
       </div>
     </div>
   )

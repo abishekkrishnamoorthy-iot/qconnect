@@ -1,0 +1,84 @@
+/* Profile Stats Card - Left Sidebar Bottom */
+.profile-stats-card {
+  background: #faf5e6;
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.profile-stats-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  background: transparent;
+}
+
+.profile-stats-item:hover {
+  background: rgba(238, 147, 11, 0.1);
+  transform: translateX(4px);
+}
+
+.profile-stats-item-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.profile-stats-icon {
+  font-size: 18px;
+  color: #ee930b;
+  width: 20px;
+  text-align: center;
+}
+
+.profile-stats-label {
+  font-size: 15px;
+  font-weight: 500;
+  color: #463804;
+}
+
+.profile-stats-count {
+  font-size: 15px;
+  font-weight: 600;
+  color: #463804;
+  padding: 4px 10px;
+  background: rgba(238, 147, 11, 0.15);
+  border-radius: 12px;
+  min-width: 32px;
+  text-align: center;
+}
+
+.profile-stats-divider {
+  height: 1px;
+  background: rgba(107, 81, 48, 0.2);
+  margin: 8px 0;
+}
+
+.profile-stats-item-logout {
+  color: #dc3545;
+}
+
+.profile-stats-item-logout .profile-stats-icon {
+  color: #dc3545;
+}
+
+.profile-stats-item-logout:hover {
+  background: rgba(220, 53, 69, 0.1);
+}
+
+.profile-stats-item-logout .profile-stats-label {
+  color: #dc3545;
+}
+
+.profile-stats-item-logout .profile-stats-count {
+  display: none;
+}
+

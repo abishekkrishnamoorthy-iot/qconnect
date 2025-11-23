@@ -1,0 +1,19 @@
+.left-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 22%;
+  max-width: 300px;
+  height: fit-content;
+  max-height: 85vh;
+}
+
+@media (max-width: 768px) {
+  .left-sidebar {
+    width: 100%;
+    max-width: 100%;
+    max-height: none;
+    order: -1;
+  }
+}
+

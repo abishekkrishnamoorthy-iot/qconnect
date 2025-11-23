@@ -9,9 +9,11 @@ const NotificationsPage = () => {
     <div className='dash'>
       <Header/>
       <div className='dashcon'>
-        <Grouppanel/>
+        <div className="dashcon-left">
+          <TrendingGroups/>
+          <Grouppanel/>
+        </div>
         <NotificationsPanel/>
-        <TrendingGroups/>
       </div>
     </div>
   )

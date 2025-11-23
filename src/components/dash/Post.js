@@ -5,12 +5,15 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { deletePost, followUser, unfollowUser, isFollowing } from '../../services/db'
 import LikeButton from '../common/LikeButton'
+import CommentPanel from '../comments/CommentPanel'
+import { normalizePostType } from '../../utils/postTypes'
 
 const Post = ({ post, postid, onDelete }) => {
   const { currentUser } = useAuth()
   const [deleting, setDeleting] = useState(false)
   const [following, setFollowing] = useState(false)
   const [followLoading, setFollowLoading] = useState(false)
+  const [commentsOpen, setCommentsOpen] = useState(false)
 
   useEffect(() => {
     if (currentUser && post.userId && post.userId !== currentUser.uid) {
@@ -45,10 +48,17 @@ const Post = ({ post, postid, onDelete }) => {
     setFollowLoading(false)
   }
 
+  const postType = normalizePostType(post.type)
+  const isQuestion = postType === 'question'
+  const canComment = postType === 'blog' || postType === 'quiz'
+
   // Count answers - answers can be an object or array
   const answerCount = post.answers 
     ? (Array.isArray(post.answers) ? post.answers.length : Object.keys(post.answers).length)
     : 0
+
+  const commentCount = post.stats?.commentCount
+    ?? (post.comments ? Object.keys(post.comments).length : 0)
 
   const isOwner = currentUser && post.userId === currentUser.uid
 
@@ -110,7 +120,7 @@ const Post = ({ post, postid, onDelete }) => {
          </div>  
        </div>
 
-       <div className="postcontent">
+      <div className="postcontent">
            <h3>{post.title}</h3>
            {post.text && <p className="post-text">{post.text}</p>}
            
@@ -181,17 +191,34 @@ const Post = ({ post, postid, onDelete }) => {
              </div>
            )}
            
-           <div className="post-actions">
-             <LikeButton post={post} />
-             <Link to={`/home/${post._id}`} className='lenans'>
-               {answerCount === 0 ? "No Answers" : `${answerCount} ${answerCount === 1 ? 'Answer' : 'Answers'}`}
-             </Link>
-             <Link to={`/home/${post._id}`}>
-               <button className="ansbtn">
-                 <FontAwesomeIcon icon="fa-regular fa-feather" size='lg' /> Answer
-               </button>
-             </Link>
-           </div>
+          <div className="post-actions">
+            <LikeButton post={post} />
+            {isQuestion ? (
+              <>
+                <Link to={`/home/${post._id}`} className='lenans'>
+                  {answerCount === 0 ? "No Answers" : `${answerCount} ${answerCount === 1 ? 'Answer' : 'Answers'}`}
+                </Link>
+                <Link to={`/home/${post._id}`}>
+                  <button className="ansbtn">
+                    <FontAwesomeIcon icon="fa-regular fa-feather" size='lg' /> Answer
+                  </button>
+                </Link>
+              </>
+            ) : (
+              <button
+                className={`comment-toggle ${commentsOpen ? 'active' : ''}`}
+                onClick={() => setCommentsOpen(!commentsOpen)}
+              >
+                <FontAwesomeIcon icon="fa-regular fa-comment" />
+                <span>
+                  {commentCount === 0
+                    ? 'Comment'
+                    : `${commentCount} ${commentCount === 1 ? 'Comment' : 'Comments'}`}
+                </span>
+              </button>
+            )}
+          </div>
+          {canComment && commentsOpen && <CommentPanel postId={post._id || post.postId} />}
        </div>
     </div>
   )

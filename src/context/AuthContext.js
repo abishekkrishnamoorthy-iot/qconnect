@@ -9,7 +9,7 @@ import {
   signInWithPopup
 } from 'firebase/auth';
 import { auth } from '../firebase/config';
-import { ref, set, get } from 'firebase/database';
+import { ref, set, get, update } from 'firebase/database';
 import { database } from '../firebase/config';
 
 const AuthContext = createContext({});
@@ -30,36 +30,58 @@ export const AuthProvider = ({ children }) => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+      const timestamp = new Date().toISOString();
+      const sanitizedUsername = username?.trim() || '';
 
       // Update Firebase Auth profile with username
       await updateProfile(user, {
-        displayName: username
+        displayName: sanitizedUsername
       });
 
       // Create user entry in Realtime Database (basic fields)
       const userRef = ref(database, `users/${user.uid}`);
       await set(userRef, {
         uid: user.uid,
-        email: email,
+        email,
+        username: sanitizedUsername,
+        displayName: sanitizedUsername,
         followerCount: 0,
         followingCount: 0,
-        createdAt: new Date().toISOString()
+        createdAt: timestamp,
+        authProvider: 'password',
+        auth: {
+          providers: ['password'],
+          emailVerified: false,
+          lastVerificationCheck: timestamp
+        },
+        preferences: {
+          theme: 'system',
+          language: 'en',
+          region: 'global'
+        },
+        account: {
+          status: 'active',
+          deletionRequestedAt: null
+        }
       });
 
       // Create username index for fast lookup
-      const usernameIndexRef = ref(database, `usernames/${username}`);
+      const usernameIndexRef = ref(database, `usernames/${sanitizedUsername}`);
       await set(usernameIndexRef, user.uid);
 
       // Create empty profile with firstLoginCompleted: false
       const profileRef = ref(database, `users/${user.uid}/profile`);
       await set(profileRef, {
-        username: username,
+        username: sanitizedUsername,
+        displayName: sanitizedUsername,
         firstName: '',
+        bio: '',
         description: '',
         interests: [],
         profilePic: '',
+        bannerPic: '',
         firstLoginCompleted: false,
-        updatedAt: new Date().toISOString()
+        updatedAt: timestamp
       });
 
       // Fetch user data to return it and update context state
@@ -148,27 +170,47 @@ export const AuthProvider = ({ children }) => {
       if (!userSnapshot.exists()) {
         // First-time Google user - create user entry
         const firstName = user.displayName ? user.displayName.split(' ')[0] : '';
+        const timestamp = new Date().toISOString();
         
         // Create user entry in Realtime Database
         await set(userRef, {
           uid: user.uid,
           email: user.email,
+          username: '',
+          displayName: user.displayName || '',
           followerCount: 0,
           followingCount: 0,
-          createdAt: new Date().toISOString(),
-          authProvider: 'google'
+          createdAt: timestamp,
+          authProvider: 'google',
+          auth: {
+            providers: ['google'],
+            emailVerified: true,
+            lastVerificationCheck: timestamp
+          },
+          preferences: {
+            theme: 'system',
+            language: 'en',
+            region: 'global'
+          },
+          account: {
+            status: 'active',
+            deletionRequestedAt: null
+          }
         });
 
         // Create profile with auto-filled data from Google
         const profileRef = ref(database, `users/${user.uid}/profile`);
         await set(profileRef, {
           username: '', // Empty initially, must be set in onboarding
+          displayName: user.displayName || '',
           firstName: firstName,
+          bio: '',
           description: '',
           interests: [],
           profilePic: user.photoURL || '',
+          bannerPic: '',
           firstLoginCompleted: false,
-          updatedAt: new Date().toISOString()
+          updatedAt: timestamp
         });
       } else {
         // Returning user - update profile picture if changed
@@ -190,9 +232,22 @@ export const AuthProvider = ({ children }) => {
 
         // Update authProvider if not set
         if (!userData.authProvider) {
-          await set(userRef, {
-            ...userData,
+          await update(userRef, {
             authProvider: 'google'
+          });
+        }
+
+        // Ensure auth metadata tracks Google linkage & verification
+        const existingProviders = new Set(userData.auth?.providers || []);
+        if (!existingProviders.has('google') || userData.auth?.emailVerified !== true) {
+          existingProviders.add('google');
+          await update(userRef, {
+            auth: {
+              ...(userData.auth || {}),
+              providers: Array.from(existingProviders),
+              emailVerified: true,
+              lastVerificationCheck: new Date().toISOString()
+            }
           });
         }
       }

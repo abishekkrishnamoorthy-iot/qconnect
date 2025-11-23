@@ -1,0 +1,118 @@
+/* Profile User Card - Left Sidebar Top */
+.profile-user-card {
+  background: #faf5e6;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.profile-user-card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.profile-user-card-avatar {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #fff7e6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #ee930b;
+}
+
+.profile-user-card-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-user-card-avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #7c6640;
+  font-size: 32px;
+}
+
+.profile-user-card-verified {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  background: #4caf50;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #faf5e6;
+  font-size: 12px;
+}
+
+.profile-user-card-info {
+  text-align: center;
+  width: 100%;
+}
+
+.profile-user-card-username {
+  margin: 0 0 4px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #463804;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.verified-badge {
+  color: #4caf50;
+  font-size: 14px;
+}
+
+.profile-user-card-email {
+  margin: 0;
+  font-size: 13px;
+  color: #6b5130;
+  opacity: 0.8;
+}
+
+.profile-user-card-edit-btn {
+  width: 100%;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #ee930b, #ffb347);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 8px rgba(238, 147, 11, 0.2);
+}
+
+.profile-user-card-edit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(238, 147, 11, 0.3);
+}
+
+.profile-user-card-edit-btn:active {
+  transform: translateY(0);
+}
+

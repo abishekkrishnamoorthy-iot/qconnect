@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import '../style/login/loginpage.css';
 import { useAuth } from '../context/AuthContext';
 
@@ -47,7 +47,7 @@ const Login = () => {
       if (firstLoginCompleted) {
         navigate('/home');
       } else {
-        navigate('/setup');
+        navigate('/onboarding');
       }
     } else if (result.error) {
       // Only show error if it's not a popup-closed case
@@ -60,32 +60,45 @@ const Login = () => {
   return (
     <div className='loginpage'>
       <div className="loginpanel">
-        <h2>Qconnect</h2>
-        {error && <div style={{color: 'red', marginBottom: '10px'}}>{error}</div>}
-        <form onSubmit={handleLogin}>
-          <div>
+        <div className="login-panel-header">
+          <div className="login-logo">
+            <span className="login-logo-q">Q</span>
+            <span className="login-logo-text">connect</span>
+          </div>
+          <h2>Welcome back</h2>
+          <p>Sign in to continue to your account</p>
+        </div>
+
+        {error && <div className="login-error">{error}</div>}
+        
+        <form onSubmit={handleLogin} className="login-form">
+          <div className="form-group">
             <input
               type='text'
               id='username'
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
-              placeholder='Username or Email'
+              placeholder=' '
               disabled={loading || googleLoading}
             />
+            <label htmlFor='username'>Username or Email</label>
           </div>
-          <div>
+          
+          <div className="form-group">
             <input
               type='password'
               id='password'
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              placeholder='Password'
+              placeholder=' '
               disabled={loading || googleLoading}
             />
+            <label htmlFor='password'>Password</label>
           </div>
-          <button type='submit' disabled={loading || googleLoading}>
+          
+          <button type='submit' className="login-submit-btn" disabled={loading || googleLoading}>
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
@@ -115,6 +128,10 @@ const Login = () => {
               </>
             )}
           </button>
+        </div>
+
+        <div className="login-footer">
+          <p>Don't have an account? <Link to="/signup" className="signup-link">Sign up</Link></p>
         </div>
       </div>
     </div>

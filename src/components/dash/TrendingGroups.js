@@ -47,7 +47,8 @@ const TrendingGroups = () => {
 
   const loadTrendingGroups = async () => {
     setLoading(true)
-    const result = await getGroups({ privacy: 'public' })
+    // Get all groups, not just public ones
+    const result = await getGroups()
     
     if (result.success) {
       // Sort by member count (descending) and take top 4
@@ -125,12 +126,15 @@ const TrendingGroups = () => {
             No groups yet
           </div>
         ) : (
-          trendingGroups.map(group => {
+          trendingGroups.map((group, index) => {
             const isMember = currentUser && group.members?.[currentUser.uid]
             const hasPending = pendingRequests[group._id] || false
             const memberCount = group.memberCount !== undefined 
               ? group.memberCount 
               : (group.members ? Object.keys(group.members).length : 0)
+            
+            // First 2 groups get fire icon, others use group icon
+            const isTopTwo = index < 2
             
             // Determine button text
             let buttonText = 'Join'
@@ -141,45 +145,42 @@ const TrendingGroups = () => {
             }
             
             return (
-              <div key={group._id} className="group-card">
+              <div key={group._id} className="trending-group-card">
                 <Link 
                   to={`/group/${group._id}`} 
                   style={{ textDecoration: 'none', color: 'inherit' }}
                 >
-                  <img 
-                    src={group.banner || '/default-banner.jpg'} 
-                    className="group-card-banner" 
-                    alt={group.name}
-                  />
-                  <img 
-                    src={group.icon || '/default-icon.png'} 
-                    className="group-card-icon" 
-                    alt={group.name}
-                  />
-                  <div className="group-card-title">{group.name || 'Unnamed Group'}</div>
-                  <div className="group-card-meta">
-                    {memberCount} {memberCount === 1 ? 'member' : 'members'} • {group.category || 'Others'} • {group.privacy || 'public'}
+                  <div className="trending-group-header">
+                    {isTopTwo ? (
+                      <div className="trending-group-fire-icon">
+                        <FontAwesomeIcon icon="fa-solid fa-fire" />
+                      </div>
+                    ) : (
+                      <img 
+                        src={group.icon || '/default-icon.png'} 
+                        className="trending-group-icon" 
+                        alt={group.name}
+                      />
+                    )}
+                    <div className="trending-group-info">
+                      <div className="trending-group-member-count">
+                        {memberCount} {memberCount === 1 ? 'member' : 'members'}
+                      </div>
+                      <div className="trending-group-name">{group.name || 'Unnamed Group'}</div>
+                    </div>
                   </div>
-                  <div className="group-card-desc">{group.description || 'No description'}</div>
                 </Link>
                 {currentUser && (
-                  <>
-                    {isMember && (
-                      <div style={{ textAlign: 'center', fontSize: '12px', color: '#666', marginTop: '8px', marginBottom: '4px' }}>
-                        Member
-                      </div>
-                    )}
-                    <button
-                      className="group-card-join-button"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        handleJoinToggle(group._id, group)
-                      }}
-                      disabled={joiningGroupId === group._id}
-                    >
-                      {joiningGroupId === group._id ? '...' : buttonText}
-                    </button>
-                  </>
+                  <button
+                    className="trending-group-join-button"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      handleJoinToggle(group._id, group)
+                    }}
+                    disabled={joiningGroupId === group._id}
+                  >
+                    {joiningGroupId === group._id ? '...' : buttonText}
+                  </button>
                 )}
               </div>
             )

@@ -16,6 +16,8 @@ import QuizForm from "./pages/QuizForm";
 import Mygrp from "./pages/Mygrp";
 import Profilepage from "./pages/Profilepage";
 import NotificationsPage from "./pages/NotificationsPage";
+import SettingsPage from "./pages/SettingsPage";
+import ChatPage from "./pages/ChatPage";
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import OnboardingRoute from "./components/common/OnboardingRoute";
 import LoadingSpinner from "./components/common/LoadingSpinner";
@@ -68,7 +70,7 @@ function App() {
         />
 
         <Route 
-          path="/setup" 
+          path="/onboarding" 
           element={<OnboardingRoute />}
         />
 
@@ -158,6 +160,18 @@ function App() {
         <Route path="/notification" element={
           <ProtectedRoute>
             <NotificationsPage />
+          </ProtectedRoute>
+        }/>
+
+        <Route path="/chat" element={
+          <ProtectedRoute>
+            <ChatPage />
+          </ProtectedRoute>
+        }/>
+
+        <Route path="/settings" element={
+          <ProtectedRoute>
+            <SettingsPage />
           </ProtectedRoute>
         }/>
       </Routes>

@@ -3,7 +3,7 @@ import Post from './Post'
 import CreateCard from '../feed/CreateCard'
 import CreateModal from '../feed/CreateModal'
 import { subscribeToPosts } from '../../services/db'
-import { sortPostsByFeedPriority, getUserContextForFeed } from '../../utils/feedOrdering'
+import { sortPostsByFeedPriority } from '../../utils/feedOrdering'
 import { ref, get } from 'firebase/database'
 import { database } from '../../firebase/config'
 import { useAuth } from '../../context/AuthContext'
@@ -46,36 +46,39 @@ const Feed = ({ id, qpost, setqpost, cudetails, groupId }) => {
   }, [currentUser, userData])
 
   useEffect(() => {
-    // Use real-time subscription for posts
+    const filters = { type: 'question' }
+    if (groupId) {
+      filters.groupId = groupId
+    }
+    
     const unsubscribe = subscribeToPosts((posts) => {
-      // Strict filtering: only show posts posted to "everyone"
-      // Never show posts where postedTo is a groupId
-      let filteredPosts = posts.filter(post => 
-        post.postedTo === "everyone" || !post.postedTo || post.postedTo == null
-      )
-      
-      // Filter out quizzes - Q&A tab only shows questions and posts
-      filteredPosts = filteredPosts.filter(post => post.type !== 'quiz')
-      
+      let filteredPosts = [...posts]
+
+      // Home feed should hide group-only posts; group feeds show everything
+      if (!groupId) {
+        filteredPosts = filteredPosts.filter(
+          post => post.postedTo === 'everyone' || !post.postedTo || post.postedTo == null
+        )
+      }
+
       // Apply feed ordering if user context is available
-      if (userContext) {
+      if (userContext && !groupId) {
         filteredPosts = sortPostsByFeedPriority(filteredPosts, userContext)
       } else {
-        // Fallback: sort by createdAt DESC
         filteredPosts = filteredPosts.sort((a, b) => {
           const aTime = a.createdAt || 0
           const bTime = b.createdAt || 0
           return bTime - aTime
         })
       }
-      
+
       setqpost(filteredPosts)
-    }, {})
+    }, filters)
 
     return () => {
       if (unsubscribe) unsubscribe()
     }
-  }, [setqpost, userContext])
+  }, [setqpost, userContext, groupId])
 
   const handlePostCreated = () => {
     setRefreshTrigger(prev => prev + 1)

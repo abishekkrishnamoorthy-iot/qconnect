@@ -50,8 +50,13 @@ const Grouppanel = () => {
   return (
     <div className='grppanel'>
      <div className="grppanelheader">
-      <FontAwesomeIcon icon="fa-solid fa-users" size='lg' className='plus' />
-      <h1>Your Groups</h1>
+      <div className="header-left">
+        <FontAwesomeIcon icon="fa-solid fa-users" size='lg' className='plus' />
+        <h1>Your Groups</h1>
+      </div>
+      <button onClick={handleOpenModal} className="create-group-header-btn" title="Create Group">
+        <FontAwesomeIcon icon="fa-solid fa-plus" />
+      </button>
      </div>
      <div className="grplist">
       {loading ? (
@@ -88,10 +93,6 @@ const Grouppanel = () => {
         })
       )}
      </div>
-     <button onClick={handleOpenModal} className="create-group-link">
-      <FontAwesomeIcon icon="fa-solid fa-circle-plus" size='sm' />
-      <span>Create Group</span>
-     </button>
      {isModalOpen && (
        <Creategrp 
          onGroupCreated={handleGroupCreated}

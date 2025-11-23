@@ -3,6 +3,7 @@ import { subscribeToPosts } from '../../services/db'
 import Post from '../dash/Post'
 import QuizPostCard from '../quiz/QuizPostCard'
 import '../../style/group/grouppage.css'
+import { normalizePostType } from '../../utils/postTypes'
 
 const GroupFeed = ({ groupId }) => {
   const [posts, setPosts] = useState([])
@@ -22,11 +23,12 @@ const GroupFeed = ({ groupId }) => {
       
       // Apply tab filter
       if (activeTab === 'qanda') {
-        filteredPosts = filteredPosts.filter(post => 
-          post.type === 'question' || post.type === 'post'
-        )
+        filteredPosts = filteredPosts.filter(post => {
+          const type = normalizePostType(post.type)
+          return type === 'question' || type === 'blog'
+        })
       } else if (activeTab === 'quiz') {
-        filteredPosts = filteredPosts.filter(post => post.type === 'quiz')
+        filteredPosts = filteredPosts.filter(post => normalizePostType(post.type) === 'quiz')
       }
       // 'all' tab shows all post types
 
@@ -84,7 +86,7 @@ const GroupFeed = ({ groupId }) => {
       <div className="group-feed-content">
         {posts.length > 0 ? (
           posts.map(post => {
-            if (post.type === 'quiz') {
+            if (normalizePostType(post.type) === 'quiz') {
               return (
                 <QuizPostCard 
                   key={post._id || post.postId} 

@@ -1,0 +1,36 @@
+.chat-page {
+  width: 100%;
+  min-height: 100vh;
+  background: #F8F4EC;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-shell {
+  flex: 1;
+  width: min(900px, 92%);
+  margin: 60px auto;
+  display: flex;
+  justify-content: center;
+}
+
+.chat-card {
+  flex: 1;
+  padding: clamp(32px, 6vw, 48px);
+  border-radius: 24px;
+  background: #F9F3E8;
+  box-shadow: 0 22px 45px rgba(70, 56, 4, 0.12);
+  text-align: center;
+  color: #463804;
+}
+
+.chat-card h1 {
+  font-size: clamp(2rem, 3vw, 2.4rem);
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+
+.chat-card p {
+  font-size: 1rem;
+  color: #6b5130;
+}

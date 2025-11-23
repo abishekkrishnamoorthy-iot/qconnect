@@ -39,7 +39,7 @@ const Createacc = () => {
     if (result.success) {
       // Wait a moment for auth state to fully update
       await new Promise(resolve => setTimeout(resolve, 100));
-      navigate('/setup');
+      navigate('/onboarding');
     } else {
       setError(result.error || 'Failed to create account. Please try again.');
       setLoading(false);
@@ -59,7 +59,7 @@ const Createacc = () => {
       if (firstLoginCompleted) {
         navigate('/home');
       } else {
-        navigate('/setup');
+        navigate('/onboarding');
       }
     } else if (result.error) {
       // Only show error if it's not a popup-closed case

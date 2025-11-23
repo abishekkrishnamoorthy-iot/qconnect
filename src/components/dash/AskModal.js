@@ -49,7 +49,7 @@ const getAllowedTypesString = () => {
 
 const AskModal = ({ onClose, onPostCreated, cudetails }) => {
   const { currentUser, userData } = useAuth();
-  const [activeTab, setActiveTab] = useState('question'); // 'question' or 'post'
+  const [activeTab, setActiveTab] = useState('question'); // 'question' or 'blog'
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -444,7 +444,7 @@ const AskModal = ({ onClose, onPostCreated, cudetails }) => {
         title: postTitle.trim(),
         text: postText.trim() || '',
         groupId: null,
-        type: 'post',
+        type: 'blog',
         visibility,
         media: mediaArray
       });
@@ -536,10 +536,10 @@ const AskModal = ({ onClose, onPostCreated, cudetails }) => {
               Create Question
             </button>
             <button
-              className={`ask-modal-tab ${activeTab === 'post' ? 'active' : ''}`}
-              onClick={() => setActiveTab('post')}
+              className={`ask-modal-tab ${activeTab === 'blog' ? 'active' : ''}`}
+              onClick={() => setActiveTab('blog')}
             >
-              Create Post
+              Create Blog Post
             </button>
           </div>
           <button className="ask-modal-close-button" onClick={handleClose} type="button">

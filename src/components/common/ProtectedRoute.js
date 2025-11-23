@@ -21,7 +21,7 @@ const ProtectedRoute = ({ children }) => {
 
   // If user data is loaded and setup is not complete, redirect to setup
   if (userData && !firstLoginCompleted) {
-    return <Navigate to="/setup" replace />;
+    return <Navigate to="/onboarding" replace />;
   }
 
   // Show protected content if authenticated and setup is complete

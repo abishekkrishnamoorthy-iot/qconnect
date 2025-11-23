@@ -13,6 +13,7 @@ import {
   runTransaction
 } from 'firebase/database';
 import { database } from '../firebase/config';
+import { normalizePostType } from '../utils/postTypes';
 
 // ========== USER FUNCTIONS ==========
 
@@ -549,6 +550,45 @@ export const toggleLikePost = async (postId, userId) => {
   }
 }
 
+// ========== COMMENT FUNCTIONS ==========
+
+export const addCommentToPost = async (postId, commentData) => {
+  try {
+    if (!postId) {
+      return { success: false, error: 'Missing postId' };
+    }
+
+    const trimmedText = (commentData.text || '').trim();
+    if (!trimmedText) {
+      return { success: false, error: 'Comment cannot be empty' };
+    }
+
+    const commentsRef = ref(database, `posts/${postId}/comments`);
+    const newCommentRef = push(commentsRef);
+    const payload = {
+      ...commentData,
+      text: trimmedText,
+      createdAt: Date.now()
+    };
+
+    await set(newCommentRef, payload);
+
+    // Increment comment count inside stats
+    const statsRef = ref(database, `posts/${postId}/stats/commentCount`);
+    await runTransaction(statsRef, (current) => {
+      if (current === null || current === undefined) {
+        return 1;
+      }
+      return current + 1;
+    });
+
+    return { success: true, commentId: newCommentRef.key };
+  } catch (error) {
+    console.error('Error adding comment:', error);
+    return { success: false, error: error.message };
+  }
+};
+
 /**
  * Subscribe to posts with real-time updates
  * @param {function} callback - Callback function to receive posts
@@ -593,6 +633,10 @@ export const subscribeToPosts = (callback, filters = {}) => {
           // Include if postedTo is "everyone", undefined, null, or doesn't exist
           return postedTo === "everyone" || postedTo === undefined || postedTo === null || !post.hasOwnProperty('postedTo');
         });
+      }
+
+      if (filters.type) {
+        postsArray = postsArray.filter(post => normalizePostType(post.type) === filters.type);
       }
       
       // Sort by createdAt DESC (client-side)
@@ -700,6 +744,81 @@ export const getGroups = async (filters = {}) => {
     return { success: true, data: [] };
   } catch (error) {
     console.error('Error getting groups:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Search groups by name (case-insensitive)
+ * @param {string} query - Search query string
+ * @param {number} limit - Maximum number of results (default: 10)
+ */
+export const searchGroups = async (query, limit = 10) => {
+  try {
+    if (!query || query.trim().length === 0) {
+      return { success: true, data: [] };
+    }
+
+    const groupsRef = ref(database, 'groups');
+    const snapshot = await get(groupsRef);
+    
+    if (!snapshot.exists()) {
+      return { success: true, data: [] };
+    }
+
+    const groups = snapshot.val();
+    const searchTerm = query.toLowerCase().trim();
+    
+    const matchingGroups = Object.values(groups)
+      .filter(group => {
+        const name = (group.name || '').toLowerCase();
+        return name.includes(searchTerm);
+      })
+      .slice(0, limit);
+
+    return { success: true, data: matchingGroups };
+  } catch (error) {
+    console.error('Error searching groups:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Search users by username (case-insensitive)
+ * @param {string} query - Search query string
+ * @param {number} limit - Maximum number of results (default: 10)
+ */
+export const searchUsers = async (query, limit = 10) => {
+  try {
+    if (!query || query.trim().length === 0) {
+      return { success: true, data: [] };
+    }
+
+    const usersRef = ref(database, 'users');
+    const snapshot = await get(usersRef);
+    
+    if (!snapshot.exists()) {
+      return { success: true, data: [] };
+    }
+
+    const users = snapshot.val();
+    const searchTerm = query.toLowerCase().trim();
+    
+    const matchingUsers = Object.entries(users)
+      .map(([uid, user]) => ({
+        ...user,
+        uid
+      }))
+      .filter(user => {
+        const username = (user.profile?.username || user.username || '').toLowerCase();
+        const displayName = (user.profile?.displayName || user.displayName || '').toLowerCase();
+        return username.includes(searchTerm) || displayName.includes(searchTerm);
+      })
+      .slice(0, limit);
+
+    return { success: true, data: matchingUsers };
+  } catch (error) {
+    console.error('Error searching users:', error);
     return { success: false, error: error.message };
   }
 };
@@ -1546,7 +1665,8 @@ export const createAnswer = async (answerData) => {
     const answer = {
       ...answerData,
       _id: newAnswerRef.key,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      media: answerData.media || []
     };
     
     await set(newAnswerRef, answer);
@@ -1554,6 +1674,12 @@ export const createAnswer = async (answerData) => {
     // Also add to post's answers
     const postAnswerRef = ref(database, `posts/${answerData.postId}/answers/${newAnswerRef.key}`);
     await set(postAnswerRef, answer);
+
+    const statsRef = ref(database, `posts/${answerData.postId}/stats/answerCount`);
+    await runTransaction(statsRef, (current) => {
+      if (current === null || current === undefined) return 1;
+      return current + 1;
+    });
     
     return { success: true, answerId: newAnswerRef.key, data: answer };
   } catch (error) {
@@ -1710,6 +1836,138 @@ export const isFollowing = async (followerId, followingId) => {
     return { success: true, isFollowing: snapshot.exists() };
   } catch (error) {
     console.error('Error checking follow status:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Get list of users following a specific user (followers)
+ * @param {string} userId - User ID to get followers for
+ */
+export const getFollowers = async (userId) => {
+  try {
+    const followsRef = ref(database, `follows`);
+    const snapshot = await get(followsRef);
+    
+    if (!snapshot.exists()) {
+      return { success: true, data: [] };
+    }
+    
+    const allFollows = snapshot.val();
+    const followers = [];
+    
+    // Find all users who follow this userId
+    // Structure: follows/{followerId}/{followingId} = true
+    for (const followerId in allFollows) {
+      if (followerId !== userId && allFollows[followerId] && allFollows[followerId][userId]) {
+        // Get follower user data
+        const userRef = ref(database, `users/${followerId}`);
+        const userSnapshot = await get(userRef);
+        if (userSnapshot.exists()) {
+          const userData = userSnapshot.val();
+          // Check if current user follows this follower back
+          const isFollowingBack = allFollows[userId] && allFollows[userId][followerId];
+          followers.push({
+            uid: followerId,
+            ...userData,
+            isFollowingBack: !!isFollowingBack
+          });
+        }
+      }
+    }
+    
+    return { success: true, data: followers };
+  } catch (error) {
+    console.error('Error getting followers:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Get list of users a specific user is following
+ * @param {string} userId - User ID to get following list for
+ */
+export const getFollowing = async (userId) => {
+  try {
+    const followingRef = ref(database, `follows/${userId}`);
+    const snapshot = await get(followingRef);
+    
+    if (!snapshot.exists()) {
+      return { success: true, data: [] };
+    }
+    
+    const following = snapshot.val();
+    const followingList = [];
+    
+    // Get user data for each followed user
+    for (const followingId in following) {
+      const userRef = ref(database, `users/${followingId}`);
+      const userSnapshot = await get(userRef);
+      if (userSnapshot.exists()) {
+        const userData = userSnapshot.val();
+        followingList.push({
+          uid: followingId,
+          ...userData
+        });
+      }
+    }
+    
+    return { success: true, data: followingList };
+  } catch (error) {
+    console.error('Error getting following:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Block a user
+ * @param {string} userId - User ID blocking
+ * @param {string} targetId - User ID to block
+ */
+export const blockUser = async (userId, targetId) => {
+  try {
+    const blockRef = ref(database, `users/${userId}/blocked/${targetId}`);
+    await set(blockRef, true);
+    
+    // Unfollow each other if they were following
+    await unfollowUser(userId, targetId);
+    await unfollowUser(targetId, userId);
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error blocking user:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Unblock a user
+ * @param {string} userId - User ID unblocking
+ * @param {string} targetId - User ID to unblock
+ */
+export const unblockUser = async (userId, targetId) => {
+  try {
+    const blockRef = ref(database, `users/${userId}/blocked/${targetId}`);
+    await remove(blockRef);
+    return { success: true };
+  } catch (error) {
+    console.error('Error unblocking user:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Check if a user is blocked
+ * @param {string} userId - User ID checking
+ * @param {string} targetId - User ID to check
+ */
+export const isBlocked = async (userId, targetId) => {
+  try {
+    const blockRef = ref(database, `users/${userId}/blocked/${targetId}`);
+    const snapshot = await get(blockRef);
+    return { success: true, isBlocked: snapshot.exists() };
+  } catch (error) {
+    console.error('Error checking block status:', error);
     return { success: false, error: error.message };
   }
 };

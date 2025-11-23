@@ -5,7 +5,7 @@ import PostForm from '../create/PostForm'
 import QuizForm from '../create/QuizForm'
 import '../../style/components/create-modal.css'
 
-const CreateModal = ({ isOpen, onClose, onPostCreated, cudetails }) => {
+const CreateModal = ({ isOpen, onClose, onPostCreated, cudetails, tabsOverride, initialTabOverride }) => {
   const location = useLocation()
   const modalRef = useRef(null)
   const firstInputRef = useRef(null)
@@ -13,6 +13,9 @@ const CreateModal = ({ isOpen, onClose, onPostCreated, cudetails }) => {
 
   // Determine current panel based on route
   const getCurrentPanel = () => {
+    if (tabsOverride?.length) {
+      return 'override'
+    }
     const path = location.pathname
     if (path === '/home/quiz') {
       return 'quiz'
@@ -28,29 +31,34 @@ const CreateModal = ({ isOpen, onClose, onPostCreated, cudetails }) => {
 
   // Memoize tabs array to prevent unnecessary recalculations
   const tabs = useMemo(() => {
+    if (tabsOverride?.length) {
+      return tabsOverride
+    }
     if (currentPanel === 'quiz') {
       return [] // No tabs for quiz panel
     } else if (currentPanel === 'all') {
-      return ['question', 'post', 'quiz'] // All panel: 3 tabs
+      return ['question', 'blog', 'quiz'] // All panel: 3 tabs
     } else if (currentPanel === 'qanda') {
-      return ['question', 'post'] // Q&A panel: 2 tabs
+      return ['question', 'blog'] // Q&A panel: 2 tabs
     }
-    return ['question', 'post'] // Default
+    return ['question', 'blog'] // Default
   }, [currentPanel])
 
-  const [activeTab, setActiveTab] = useState(() => {
-    // Initialize based on current panel
-    if (currentPanel === 'quiz') {
+  const pickInitialTab = () => {
+    if (initialTabOverride) return initialTabOverride
+    if (currentPanel === 'quiz' && !tabsOverride?.length) {
       return 'quiz'
     }
     return tabs[0] || 'question'
-  })
+  }
+
+  const [activeTab, setActiveTab] = useState(pickInitialTab)
   const [formKey, setFormKey] = useState(0) // Key to force form remount on reset
 
   // Form state preservation
   const [formStates, setFormStates] = useState({
     question: {},
-    post: {},
+    blog: {},
     quiz: {}
   })
 
@@ -72,13 +80,13 @@ const CreateModal = ({ isOpen, onClose, onPostCreated, cudetails }) => {
       return
     }
     
-    if (currentPanel === 'quiz') {
+    if (currentPanel === 'quiz' && !tabsOverride?.length) {
       setActiveTab('quiz')
     } else if (tabs.length > 0) {
       // Reset to first tab when panel changes or modal opens
-      setActiveTab(tabs[0] || 'question')
+      setActiveTab(initialTabOverride || tabs[0] || 'question')
     }
-  }, [currentPanel, isOpen, tabs])
+  }, [currentPanel, isOpen, tabs, tabsOverride, initialTabOverride])
 
   // Body scroll lock
   useEffect(() => {
@@ -133,7 +141,7 @@ const CreateModal = ({ isOpen, onClose, onPostCreated, cudetails }) => {
     // Reset all form states after successful submission
     setFormStates({
       question: {},
-      post: {},
+      blog: {},
       quiz: {}
     })
     setFormKey(prev => prev + 1) // Force form remount
@@ -156,13 +164,13 @@ const CreateModal = ({ isOpen, onClose, onPostCreated, cudetails }) => {
       })
       setFormKey(prev => prev + 1) // Force form remount on next open
       // Reset active tab to first tab when modal closes
-      if (currentPanel === 'quiz') {
+      if (currentPanel === 'quiz' && !tabsOverride?.length) {
         setActiveTab('quiz')
       } else {
-        setActiveTab(tabs[0] || 'question')
+        setActiveTab(initialTabOverride || tabs[0] || 'question')
       }
     }
-  }, [isOpen, currentPanel, tabs])
+  }, [isOpen, currentPanel, tabs, tabsOverride, initialTabOverride])
 
   if (!isOpen) return null
 
@@ -202,7 +210,7 @@ const CreateModal = ({ isOpen, onClose, onPostCreated, cudetails }) => {
                 aria-selected={activeTab === tab}
                 role="tab"
               >
-                {tab === 'question' ? 'Create Question' : tab === 'post' ? 'Create Post' : 'Create Quiz'}
+                {tab === 'question' ? 'Create Question' : tab === 'blog' ? 'Create Blog Post' : 'Create Quiz'}
               </button>
             ))}
           </div>
@@ -227,17 +235,17 @@ const CreateModal = ({ isOpen, onClose, onPostCreated, cudetails }) => {
                 onStateChange={(state) => handleFormStateChange('question', state)}
               />
             )}
-            {activeTab === 'post' && (
+            {activeTab === 'blog' && (
               <PostForm
-                key={`post-${formKey}`}
+                key={`blog-${formKey}`}
                 ref={firstInputRef}
                 onSuccess={handleSuccess}
                 onError={(error) => {
                   // Error handling in form component
                 }}
                 cudetails={cudetails}
-                initialState={formStates.post}
-                onStateChange={(state) => handleFormStateChange('post', state)}
+                initialState={formStates.blog}
+                onStateChange={(state) => handleFormStateChange('blog', state)}
               />
             )}
             {activeTab === 'quiz' && (

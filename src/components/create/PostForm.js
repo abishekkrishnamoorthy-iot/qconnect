@@ -196,7 +196,7 @@ const PostForm = forwardRef(({ onSuccess, onError, cudetails, initialState, onSt
         userProfilePic: userData?.profile?.profilePic || userData?.profilePic || '',
         title: title.trim() || null,
         text: body.trim() || '',
-        type: 'post',
+        type: 'blog',
         visibility,
         media: mediaArray,
         postedTo: finalPostedTo

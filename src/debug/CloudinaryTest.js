@@ -85,7 +85,7 @@ const CloudinaryTest = () => {
         username: userData?.username || 'Test User',
         title: 'Cloudinary Test Post',
         text: 'This is a test post created by the Cloudinary test component',
-        type: 'post',
+        type: 'blog',
         visibility: 'public',
         media: [{
           type: 'image',
