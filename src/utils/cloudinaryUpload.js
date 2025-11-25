@@ -8,16 +8,18 @@ export async function uploadToCloudinary(file, retryAttempt = 0) {
   const MAX_RETRIES = 2;
   const RETRY_DELAY = 500; // ms
   
-  // Get values from environment variables with fallback
-  const cloud_name = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || "dfayzbhpu";
-  const upload_preset = process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET || "qconnect";
-  const endpoint = `https://api.cloudinary.com/v1_1/${cloud_name}/auto/upload`;
+  // Get values from environment variables - required
+  const cloud_name = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME;
+  const upload_preset = process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET;
 
-  // Validate environment variables
-  const usingEnvVars = !!(process.env.REACT_APP_CLOUDINARY_CLOUD_NAME && process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET);
-  if (!usingEnvVars) {
-    console.warn("⚠ Cloudinary env vars not found, using fallback values");
+  if (!cloud_name || !upload_preset) {
+    throw new Error(
+      'Missing required Cloudinary environment variables. Please set REACT_APP_CLOUDINARY_CLOUD_NAME ' +
+      'and REACT_APP_CLOUDINARY_UPLOAD_PRESET in your .env file. See .env.example for reference.'
+    );
   }
+
+  const endpoint = `https://api.cloudinary.com/v1_1/${cloud_name}/auto/upload`;
 
   // Start debug logging
   console.group("CLOUDINARY UPLOAD DEBUG");

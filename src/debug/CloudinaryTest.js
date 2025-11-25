@@ -65,7 +65,8 @@ const CloudinaryTest = () => {
       setCloudinaryResponse({ url, success: true });
 
       // Validate URL format
-      const urlFormatValid = url && url.startsWith('https://res.cloudinary.com/dfayzbhpu/');
+      const cloudName = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || 'dfayzbhpu';
+      const urlFormatValid = url && url.startsWith(`https://res.cloudinary.com/${cloudName}/`);
       setValidationChecks(prev => ({ ...prev, urlFormat: urlFormatValid }));
 
       if (!urlFormatValid) {

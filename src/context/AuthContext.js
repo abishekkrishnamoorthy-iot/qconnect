@@ -11,6 +11,18 @@ import {
 import { auth } from '../firebase/config';
 import { ref, set, get, update } from 'firebase/database';
 import { database } from '../firebase/config';
+import { 
+  createPendingUser, 
+  movePendingUserToVerified,
+  verifyPendingUserOTP as verifyOTP,
+  updatePendingUserOTP
+} from '../services/db';
+import { 
+  sendVerificationEmail, 
+  generateOTP, 
+  generateExpiryTime, 
+  getExpiryTimestamp 
+} from '../utils/emailService';
 
 const AuthContext = createContext({});
 
@@ -25,97 +37,149 @@ export const AuthProvider = ({ children }) => {
   const [authReady, setAuthReady] = useState(false);
   const [profileLoaded, setProfileLoaded] = useState(false);
 
-  // Sign up function
+  // Sign up function - Creates pending user and sends verification email
   const signup = async (email, password, username) => {
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      const timestamp = new Date().toISOString();
+      // Generate OTP and expiry
+      const otpCode = generateOTP();
+      const expiryTimestamp = getExpiryTimestamp(10); // 10 minutes
+      const expiryTime = generateExpiryTime(10);
       const sanitizedUsername = username?.trim() || '';
 
-      // Update Firebase Auth profile with username
-      await updateProfile(user, {
-        displayName: sanitizedUsername
-      });
-
-      // Create user entry in Realtime Database (basic fields)
-      const userRef = ref(database, `users/${user.uid}`);
-      await set(userRef, {
-        uid: user.uid,
+      // Create pending user in database
+      const pendingUserResult = await createPendingUser(
         email,
-        username: sanitizedUsername,
-        displayName: sanitizedUsername,
-        followerCount: 0,
-        followingCount: 0,
-        createdAt: timestamp,
-        authProvider: 'password',
-        auth: {
-          providers: ['password'],
-          emailVerified: false,
-          lastVerificationCheck: timestamp
-        },
-        preferences: {
-          theme: 'system',
-          language: 'en',
-          region: 'global'
-        },
-        account: {
-          status: 'active',
-          deletionRequestedAt: null
-        }
-      });
+        password,
+        sanitizedUsername,
+        otpCode,
+        expiryTimestamp
+      );
 
-      // Create username index for fast lookup
-      const usernameIndexRef = ref(database, `usernames/${sanitizedUsername}`);
-      await set(usernameIndexRef, user.uid);
-
-      // Create empty profile with firstLoginCompleted: false
-      const profileRef = ref(database, `users/${user.uid}/profile`);
-      await set(profileRef, {
-        username: sanitizedUsername,
-        displayName: sanitizedUsername,
-        firstName: '',
-        bio: '',
-        description: '',
-        interests: [],
-        profilePic: '',
-        bannerPic: '',
-        firstLoginCompleted: false,
-        updatedAt: timestamp
-      });
-
-      // Fetch user data to return it and update context state
-      // We need to fetch manually since onAuthStateChanged might not have fired yet
-      // Reuse existing userRef and profileRef since they point to the same paths
-      const profileSnapshot = await get(profileRef);
-      const userSnapshot = await get(userRef);
-      
-      let fetchedUserData = null;
-      if (userSnapshot.exists()) {
-        fetchedUserData = userSnapshot.val();
-        if (profileSnapshot.exists()) {
-          fetchedUserData.profile = profileSnapshot.val();
-        }
+      if (!pendingUserResult.success) {
+        return { success: false, error: pendingUserResult.error || 'Failed to create pending user' };
       }
-      
-      // Manually update context state to ensure it's available immediately
-      // This ensures OnboardingRoute has the data it needs
-      // Note: onAuthStateChanged will also fire and update state, but we do this
-      // to ensure state is available immediately after signup
-      setCurrentUser(user);
-      setAuthReady(true);
-      if (fetchedUserData) {
-        setUserData(fetchedUserData);
-        setProfileLoaded(true);
-      } else {
-        // If userData fetch failed, still set profileLoaded to prevent infinite loading
-        setProfileLoaded(true);
-      }
-      // Note: Don't set loading to false here - onAuthStateChanged will handle it
 
-      return { success: true, user, userData: fetchedUserData };
+      // Send verification email via EmailJS
+      const emailResult = await sendVerificationEmail(
+        email,
+        otpCode,
+        expiryTime,
+        sanitizedUsername || 'there'
+      );
+
+      if (!emailResult.success) {
+        // If email fails, we still return success with tempUserId
+        // User can resend email from verification page
+        console.warn('Email sending failed, but pending user created:', emailResult.error);
+      }
+
+      // Return tempUserId instead of user - user will be created after verification
+      return { 
+        success: true, 
+        tempUserId: pendingUserResult.tempUserId,
+        email,
+        emailSent: emailResult.success
+      };
     } catch (error) {
       console.error('Signup error:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
+  // Verify OTP and move pending user to verified users
+  const verifyEmail = async (tempUserId, otp) => {
+    try {
+      // Verify OTP
+      const verifyResult = await verifyOTP(tempUserId, otp);
+      
+      if (!verifyResult.success || !verifyResult.valid) {
+        return { 
+          success: false, 
+          error: verifyResult.error || 'Invalid verification code',
+          remainingAttempts: verifyResult.remainingAttempts,
+          locked: verifyResult.locked,
+          expired: verifyResult.expired
+        };
+      }
+
+      // Move pending user to verified users (creates Firebase Auth account)
+      const moveResult = await movePendingUserToVerified(tempUserId);
+      
+      if (!moveResult.success) {
+        return { success: false, error: moveResult.error || 'Failed to verify account' };
+      }
+
+      // Update context state
+      setCurrentUser(moveResult.user);
+      setAuthReady(true);
+      
+      // Fetch fresh user data to ensure emailVerified status is updated
+      const freshUserData = await fetchUserData(moveResult.user.uid);
+      if (freshUserData) {
+        setUserData(freshUserData);
+        setProfileLoaded(true);
+      } else if (moveResult.userData) {
+        // Fallback to returned userData if fetch fails
+        setUserData(moveResult.userData);
+        setProfileLoaded(true);
+      }
+
+      return { 
+        success: true, 
+        user: moveResult.user, 
+        userData: freshUserData || moveResult.userData
+      };
+    } catch (error) {
+      console.error('Email verification error:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
+  // Resend verification email
+  const resendVerificationEmail = async (tempUserId) => {
+    try {
+      // Import here to avoid circular dependency
+      const { getPendingUser } = await import('../services/db');
+      
+      const pendingUserResult = await getPendingUser(tempUserId);
+      
+      if (!pendingUserResult.success) {
+        return { success: false, error: 'Pending user not found' };
+      }
+
+      const pendingUser = pendingUserResult.data;
+      
+      // Generate new OTP and expiry
+      const newOtpCode = generateOTP();
+      const newExpiryTimestamp = getExpiryTimestamp(10); // 10 minutes
+      const newExpiryTime = generateExpiryTime(10);
+
+      // Update pending user with new OTP
+      const updateResult = await updatePendingUserOTP(
+        tempUserId,
+        newOtpCode,
+        newExpiryTimestamp
+      );
+
+      if (!updateResult.success) {
+        return { success: false, error: updateResult.error || 'Failed to update OTP' };
+      }
+
+      // Send new verification email
+      const emailResult = await sendVerificationEmail(
+        pendingUser.email,
+        newOtpCode,
+        newExpiryTime,
+        pendingUser.username || 'there'
+      );
+
+      if (!emailResult.success) {
+        return { success: false, error: emailResult.error || 'Failed to send email' };
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('Resend verification email error:', error);
       return { success: false, error: error.message };
     }
   };
@@ -365,6 +429,8 @@ export const AuthProvider = ({ children }) => {
     signInWithGoogle,
     signOut,
     fetchUserData,
+    verifyEmail,
+    resendVerificationEmail,
     loading,
     authReady,
     profileLoaded

@@ -128,7 +128,10 @@ const SettingsPage = () => {
   );
 
   const isPasswordUser = emailProviders.includes('password');
-  const isEmailVerified = currentUser?.emailVerified ?? false;
+  // Check both Firebase Auth emailVerified and database auth.emailVerified
+  // Database emailVerified is set when user verifies via OTP
+  // Priority: database auth.emailVerified (from OTP) > Firebase Auth emailVerified
+  const isEmailVerified = userData?.auth?.emailVerified ?? currentUser?.emailVerified ?? false;
   const showVerificationBanner = isPasswordUser && !isEmailVerified;
   const accountStatus = userData?.account?.status || 'active';
   const deletionRequestedAt = userData?.account?.deletionRequestedAt;

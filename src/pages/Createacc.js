@@ -37,9 +37,15 @@ const Createacc = () => {
     const result = await signup(email, passcode, username);
     
     if (result.success) {
-      // Wait a moment for auth state to fully update
-      await new Promise(resolve => setTimeout(resolve, 100));
-      navigate('/onboarding');
+      // Redirect to verification page with tempUserId and email
+      navigate('/verify-email', {
+        state: {
+          tempUserId: result.tempUserId,
+          email: result.email,
+          emailSent: result.emailSent
+        },
+        replace: true
+      });
     } else {
       setError(result.error || 'Failed to create account. Please try again.');
       setLoading(false);

@@ -1,0 +1,103 @@
+{
+  "rules": {
+    "pending_users": {
+      "$tempUserId": {
+        ".read": true,
+        ".write": true
+      }
+    },
+    "groups": {
+      ".read": true,
+      ".write": "auth != null",
+      "$groupId": {
+        ".read": true,
+        ".write": "auth != null",
+        "members": {
+          ".read": "data.child(auth.uid).exists() || root.child('groups').child($groupId).child('admins').child(auth.uid).val() == true",
+          ".write": "root.child('groups').child($groupId).child('admins').child(auth.uid).val() == true"
+        },
+        "requests": {
+          ".read": "root.child('groups').child($groupId).child('admins').child(auth.uid).val() == true",
+          "$requestId": {
+            ".write": "auth.uid == data.child('userId').val() || root.child('groups').child($groupId).child('admins').child(auth.uid).val() == true"
+          }
+        },
+        "memberCount": {
+          ".read": true,
+          ".write": false
+        },
+        "admins": {
+          ".read": "data.child(auth.uid).exists() || root.child('groups').child($groupId).child('members').child(auth.uid).exists() || root.child('groups').child($groupId).child('admins').child(auth.uid).val() == true",
+          ".write": "root.child('groups').child($groupId).child('creatorId').val() == auth.uid || root.child('groups').child($groupId).child('admins').child(auth.uid).val() == true"
+        },
+        "creatorId": {
+          ".write": false
+        }
+      }
+    },
+    "userGroups": {
+      "$uid": {
+        ".read": "auth.uid == $uid",
+        ".write": "auth.uid == $uid"
+      }
+    },
+    "notifications": {
+      "$uid": {
+        ".read": "auth.uid == $uid",
+        ".write": "auth.uid == $uid || (newData.hasChild('fromUserId') && newData.child('fromUserId').val() == auth.uid) || (newData.hasChild('fromUserId') && newData.hasChild('groupId') && root.child('groups').child(newData.child('groupId').val()).child('admins').child(auth.uid).val() == true)"
+      }
+    },
+    "posts": {
+      ".read": true,
+      ".write": "auth != null",
+      "$postId": {
+        ".read": true,
+        ".write": "auth != null && (newData.child('userId').val() == auth.uid || data.child('userId').val() == auth.uid)"
+      }
+    },
+    "users": {
+      ".read": true,
+      "$uid": {
+        ".read": true,
+        ".write": "auth.uid == $uid",
+        "profile": {
+          ".read": true,
+          ".write": "auth.uid == $uid"
+        }
+      }
+    },
+    "usernames": {
+      "$username": {
+        ".read": true,
+        ".write": "auth != null"
+      }
+    },
+    "groupRequests": {
+      "$groupId": {
+        "$userId": {
+          ".read": "auth.uid == $userId || root.child('groups').child($groupId).child('admins').child(auth.uid).val() == true",
+          ".write": "auth.uid == $userId || root.child('groups').child($groupId).child('admins').child(auth.uid).val() == true"
+        }
+      }
+    },
+    "follows": {
+      "$uid": {
+        "$followId": {
+          ".read": "auth != null",
+          ".write": "auth.uid == $uid"
+        }
+      }
+    },
+    "quizzes": {
+      "$quizId": {
+        ".read": true,
+        ".write": "auth != null && newData.child('userId').val() == auth.uid"
+      }
+    },
+    "interestPool": {
+      ".read": true,
+      ".write": false
+    }
+  }
+}
+

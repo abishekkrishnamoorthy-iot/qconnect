@@ -175,10 +175,53 @@
   color: #666;
 }
 
+.notification-post-details {
+  margin: 12px 0;
+  padding: 12px;
+  background-color: #FFFFFF;
+  border-radius: 8px;
+  border-left: 3px solid #EE930B;
+}
+
+.notification-post-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #463804;
+  margin-bottom: 6px;
+}
+
+.notification-post-content {
+  font-size: 13px;
+  line-height: 1.4;
+  color: #666;
+  margin: 0;
+}
+
+.notification-post-preview {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background-color: #FFFFFF;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #555;
+  border-left: 2px solid #EE930B;
+}
+
+.notification-quiz-score {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #4CAF50 0%, #45A049 100%);
+  color: #FFFFFF;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .notification-time {
   font-size: 12px;
   color: #999;
-  margin-top: 4px;
+  margin-top: 8px;
 }
 
 .notification-actions {
@@ -187,18 +230,31 @@
   margin-top: 12px;
   padding-top: 12px;
   border-top: 1px solid #e0e0e0;
+  align-items: center;
+}
+
+.notification-status-badge {
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+  margin-left: auto;
 }
 
 .approve-btn,
 .reject-btn {
   flex: 1;
-  padding: 10px 16px;
+  padding: 12px;
   border: none;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  height: 48px;
 }
 
 .approve-btn {
@@ -208,7 +264,12 @@
 
 .approve-btn:hover:not(:disabled) {
   background-color: #45a049;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.4);
+}
+
+.approve-btn:active:not(:disabled) {
+  transform: translateY(0);
   box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
 }
 
@@ -219,7 +280,12 @@
 
 .reject-btn:hover:not(:disabled) {
   background-color: #da190b;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(244, 67, 54, 0.4);
+}
+
+.reject-btn:active:not(:disabled) {
+  transform: translateY(0);
   box-shadow: 0 2px 4px rgba(244, 67, 54, 0.3);
 }
 

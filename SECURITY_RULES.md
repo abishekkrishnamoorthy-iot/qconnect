@@ -2,11 +2,18 @@
 
 This document contains the recommended security rules for Qconnect's Firebase Realtime Database. These rules should be applied in the Firebase Console under Database > Rules.
 
-## Group-Related Rules
+## Complete Security Rules
 
 ```json
 {
   "rules": {
+    "pending_users": {
+      "$tempUserId": {
+        ".read": true,
+        ".write": true,
+        ".validate": "newData.hasChildren(['email', 'password', 'verificationCode', 'expiryTimestamp', 'createdAt']) && newData.child('email').val() is string && newData.child('password').val() is string && newData.child('verificationCode').val() is string && newData.child('verificationCode').val().length == 6 && newData.child('expiryTimestamp').val() is number"
+      }
+    },
     "groups": {
       "$groupId": {
         // Public read access for group metadata
@@ -113,7 +120,9 @@ This document contains the recommended security rules for Qconnect's Firebase Re
 
 ## Important Notes
 
-1. **Member Operations**: Only group admins can add/remove members. This prevents unauthorized joins/leaves.
+1. **Pending Users**: The `pending_users` path allows unauthenticated writes to enable email verification during signup. This is necessary because users haven't authenticated yet. The validation ensures only properly structured data with email, password, verification code, and expiry timestamp can be written. After verification, users are moved to the `users` path and pending entries are deleted.
+
+2. **Member Operations**: Only group admins can add/remove members. This prevents unauthorized joins/leaves.
 
 2. **Request Management**: Users can create their own join requests, but only admins can approve/reject them.
 

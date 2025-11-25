@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Qconnect Notification</title>
+    <style type="text/css">
+        /* Reset styles for email clients */
+        body, table, td, p, a, li, blockquote {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+        table, td {
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
+        }
+        img {
+            -ms-interpolation-mode: bicubic;
+            border: 0;
+            outline: none;
+            text-decoration: none;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100% !important;
+            background-color: #F5F5F5;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px 10px;
+            background-color: #F5F5F5;
+        }
+        
+        .main-card {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #FFFFFF;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header-section {
+            background: linear-gradient(135deg, #F99806 0%, #EE930B 100%);
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .header-logo {
+            font-size: 36px;
+            font-weight: 700;
+            color: #FFFFFF;
+            margin: 0 0 8px 0;
+            letter-spacing: 1px;
+        }
+        
+        .header-logo .q-letter {
+            color: #FFF8E7;
+        }
+        
+        .header-tagline {
+            font-size: 16px;
+            color: #FFF8E7;
+            margin: 0;
+            opacity: 0.95;
+        }
+        
+        .content-section {
+            padding: 40px 30px;
+        }
+        
+        .notification-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 24px;
+            background: linear-gradient(135deg, #F99806 0%, #EE930B 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: #FFFFFF;
+        }
+        
+        .content-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #463804;
+            margin: 0 0 16px 0;
+            text-align: center;
+        }
+        
+        .content-text {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #333333;
+            margin: 0 0 24px 0;
+        }
+        
+        .notification-card {
+            background-color: #F9F0DB;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 24px 0;
+            border-left: 4px solid #EE930B;
+        }
+        
+        .notification-card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #463804;
+            margin: 0 0 12px 0;
+        }
+        
+        .notification-card-content {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #555555;
+            margin: 0;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 16px 0;
+            padding: 12px;
+            background-color: #FFFFFF;
+            border-radius: 8px;
+        }
+        
+        .user-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #463804;
+            margin: 0;
+        }
+        
+        .group-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 16px 0;
+            padding: 12px;
+            background-color: #FFFFFF;
+            border-radius: 8px;
+        }
+        
+        .group-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #463804;
+            margin: 0;
+        }
+        
+        .post-preview {
+            background-color: #FFFFFF;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+            border: 1px solid #E0E0E0;
+        }
+        
+        .post-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #463804;
+            margin: 0 0 8px 0;
+        }
+        
+        .post-content {
+            font-size: 14px;
+            line-height: 1.5;
+            color: #666666;
+            margin: 0;
+        }
+        
+        .quiz-score {
+            background: linear-gradient(135deg, #4CAF50 0%, #45A049 100%);
+            color: #FFFFFF;
+            padding: 16px 24px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 16px 0;
+        }
+        
+        .quiz-score-value {
+            font-size: 36px;
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        .quiz-score-label {
+            font-size: 14px;
+            margin: 4px 0 0 0;
+            opacity: 0.9;
+        }
+        
+        .action-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #F99806 0%, #EE930B 100%);
+            color: #FFFFFF;
+            text-decoration: none;
+            padding: 14px 32px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            text-align: center;
+            margin: 24px auto;
+            transition: all 0.3s ease;
+        }
+        
+        .action-button:hover {
+            background: linear-gradient(135deg, #EE930B 0%, #D6820A 100%);
+            box-shadow: 0 4px 12px rgba(238, 147, 11, 0.3);
+        }
+        
+        .footer-section {
+            background-color: #F9F0DB;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .footer-text {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #666666;
+            margin: 0 0 12px 0;
+        }
+        
+        .footer-link {
+            color: #EE930B;
+            text-decoration: none;
+        }
+        
+        .footer-link:hover {
+            text-decoration: underline;
+        }
+        
+        /* Mobile responsive styles */
+        @media only screen and (max-width: 600px) {
+            .email-container {
+                padding: 10px 5px !important;
+            }
+            
+            .main-card {
+                width: 100% !important;
+                max-width: 100% !important;
+                border-radius: 0 !important;
+            }
+            
+            .header-section {
+                padding: 30px 20px !important;
+            }
+            
+            .header-logo {
+                font-size: 28px !important;
+            }
+            
+            .header-tagline {
+                font-size: 14px !important;
+            }
+            
+            .content-section {
+                padding: 30px 20px !important;
+            }
+            
+            .content-title {
+                font-size: 20px !important;
+                margin-bottom: 12px !important;
+            }
+            
+            .content-text {
+                font-size: 15px !important;
+                margin-bottom: 20px !important;
+            }
+            
+            .notification-card {
+                padding: 20px !important;
+                margin: 20px 0 !important;
+            }
+            
+            .notification-card-title {
+                font-size: 16px !important;
+            }
+            
+            .notification-card-content {
+                font-size: 14px !important;
+            }
+            
+            .quiz-score-value {
+                font-size: 32px !important;
+            }
+            
+            .action-button {
+                padding: 12px 24px !important;
+                font-size: 15px !important;
+            }
+            
+            .footer-section {
+                padding: 20px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="main-card">
+            <!-- Header -->
+            <div class="header-section">
+                <div class="header-logo">
+                    <span class="q-letter">Q</span>connect
+                </div>
+                <p class="header-tagline">Stay Connected, Stay Updated</p>
+            </div>
+            
+            <!-- Content -->
+            <div class="content-section">
+                <!-- Icon based on notification type -->
+                <div class="notification-icon">
+                    {{notification_icon}}
+                </div>
+                
+                <h2 class="content-title">{{notification_title}}</h2>
+                
+                <p class="content-text">{{notification_greeting}}</p>
+                
+                <!-- Notification Card -->
+                <div class="notification-card">
+                    <h3 class="notification-card-title">{{card_title}}</h3>
+                    <p class="notification-card-content">{{card_content}}</p>
+                    
+                    <!-- User Info (for group_request, follow_post, quiz_complete) -->
+                    {{member_info_html}}
+                    
+                    <!-- Group Info (for group_post, group_request) -->
+                    {{group_info_html}}
+                    
+                    <!-- Post Preview (for group_post, follow_post) -->
+                    {{post_preview_html}}
+                    
+                    <!-- Quiz Score (for quiz_complete) -->
+                    {{quiz_score_html}}
+                </div>
+                
+                <!-- Action Button -->
+                {{action_button_html}}
+            </div>
+            
+            <!-- Footer -->
+            <div class="footer-section">
+                <p class="footer-text">
+                    This is an automated notification from <strong>Qconnect</strong>.
+                </p>
+                <p class="footer-text">
+                    You can manage your notification preferences in your 
+                    <a href="{{website_link}}/settings" class="footer-link">account settings</a>.
+                </p>
+                <p class="footer-text" style="font-size: 12px; color: #999999; margin-top: 16px;">
+                    © 2024 Qconnect. All rights reserved.
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

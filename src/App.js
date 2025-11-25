@@ -22,6 +22,7 @@ import ProtectedRoute from "./components/common/ProtectedRoute";
 import OnboardingRoute from "./components/common/OnboardingRoute";
 import LoadingSpinner from "./components/common/LoadingSpinner";
 import { useAuth } from "./context/AuthContext";
+import VerifyEmail from "./pages/VerifyEmail";
 
 function App() {
   const { currentUser, userData, loading, authReady, profileLoaded } = useAuth();
@@ -67,6 +68,11 @@ function App() {
         <Route 
           path="/signup" 
           element={currentUser ? <Navigate to="/home" /> : <Createacc/>}
+        />
+
+        <Route 
+          path="/verify-email" 
+          element={currentUser ? <Navigate to="/home" /> : <VerifyEmail/>}
         />
 
         <Route 

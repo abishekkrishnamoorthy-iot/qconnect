@@ -14,6 +14,9 @@ import {
 } from 'firebase/database';
 import { database } from '../firebase/config';
 import { normalizePostType } from '../utils/postTypes';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebase/config';
+import { sendNotificationEmail } from '../utils/notificationEmailService';
 
 // ========== USER FUNCTIONS ==========
 
@@ -295,8 +298,9 @@ export const createPost = async (postData) => {
         // Verify media array
         if (savedPost.media && Array.isArray(savedPost.media)) {
           console.log("✓ Media array exists and is correct");
+          const cloudName = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || 'dfayzbhpu';
           savedPost.media.forEach((item, index) => {
-            if (item.url && item.url.startsWith('https://res.cloudinary.com/dfayzbhpu/')) {
+            if (item.url && item.url.startsWith(`https://res.cloudinary.com/${cloudName}/`)) {
               console.log(`  ✓ Media ${index + 1} URL valid`);
             } else {
               console.error(`  ✗ Media ${index + 1} URL invalid:`, item.url);
@@ -366,6 +370,63 @@ export const createPost = async (postData) => {
       } catch (notifError) {
         // Don't block post creation if notification fails
         console.error('Error creating group post notifications:', notifError);
+      }
+    }
+    
+    // Create notifications for followers if post is posted to "everyone"
+    if (postedTo === "everyone") {
+      try {
+        // Get all users who follow the post author
+        const followsRef = ref(database, 'follows');
+        const followsSnapshot = await get(followsRef);
+        
+        if (followsSnapshot.exists()) {
+          const allFollows = followsSnapshot.val();
+          const followerIds = [];
+          
+          // Find all users who follow this post author
+          // Structure: follows/{followerId}/{followingId} = true
+          for (const followerId in allFollows) {
+            if (followerId !== postData.userId && allFollows[followerId] && allFollows[followerId][postData.userId]) {
+              followerIds.push(followerId);
+            }
+          }
+          
+          if (followerIds.length > 0) {
+            // Get post author username
+            const authorUsername = postData.username || 'Someone';
+            
+            // Format post title for message (truncate if too long)
+            let postTitle = postData.title || '';
+            if (postTitle.length > 50) {
+              postTitle = postTitle.substring(0, 47) + '...';
+            }
+            
+            // Create notification message
+            const message = postTitle 
+              ? `${authorUsername} shared a new post: '${postTitle}'`
+              : `${authorUsername} shared a new post`;
+            
+            // Create notifications for all followers
+            const followNotificationPromises = followerIds.map(async (followerId) => {
+              await createNotification(followerId, {
+                type: 'follow_post',
+                fromUserId: postData.userId, // Post author
+                postId: newPostRef.key,
+                message: message,
+                postTitle: postData.title || '',
+                postContent: postData.text || '',
+                read: false
+              });
+            });
+            
+            await Promise.all(followNotificationPromises);
+            console.log(`✓ Created follow_post notifications for ${followNotificationPromises.length} followers`);
+          }
+        }
+      } catch (followNotifError) {
+        // Don't block post creation if notification fails
+        console.error('Error creating follow_post notifications:', followNotifError);
       }
     }
     
@@ -1470,21 +1531,70 @@ export const requestGroupJoin = async (groupId, uid) => {
       admins[group.creatorId] = true;
     }
     
-    const notificationPromises = Object.keys(admins).map(async (adminId) => {
+    const adminIds = Object.keys(admins);
+    
+    if (adminIds.length === 0) {
+      console.warn('No admins found for group:', groupId);
+      console.groupEnd();
+      return { success: false, error: 'No admins found for this group' };
+    }
+    
+    // Get website link for action URL
+    const websiteLink = process.env.REACT_APP_WEBSITE_LINK || process.env.REACT_APP_WEBSITE_URL || 'https://qconnect.com';
+    const actionLink = `${websiteLink}/group/${groupId}`;
+    
+    const notificationPromises = adminIds.map(async (adminId) => {
+      // Create in-app notification
       await createNotification(adminId, {
         type: 'group_request',
         fromUserId: uid,
         groupId: groupId,
         requestId: uid,
         message: `${username} requested to join ${group.name}`,
+        groupName: group.name,
         read: false
       });
+      
+      // Send email notification
+      try {
+        const adminUserResult = await getUser(adminId);
+        if (adminUserResult.success) {
+          const adminUser = adminUserResult.data;
+          // Get email from userData (could be at root level)
+          // For manual signup: email is at root level
+          // For Google OAuth: email should also be stored at root level when user is created
+          const adminEmail = adminUser.email;
+          
+          if (adminEmail && adminEmail.includes('@')) {
+            const emailResult = await sendNotificationEmail(adminEmail, {
+              type: 'group_request',
+              memberName: username,
+              groupName: group.name,
+              actionLink: actionLink
+            });
+            
+            if (emailResult.success) {
+              console.log(`✓ Notification email sent to admin ${adminId}: ${adminEmail}`);
+            } else {
+              console.warn(`⚠ Failed to send email to admin ${adminId}: ${emailResult.error}`);
+            }
+          } else {
+            console.warn(`⚠ Admin ${adminId} has no valid email address in database`);
+            console.log('Admin user data:', { hasEmail: !!adminUser.email, email: adminUser.email });
+          }
+        } else {
+          console.warn(`⚠ Could not fetch admin user data for ${adminId}:`, adminUserResult.error);
+        }
+      } catch (emailError) {
+        // Don't fail the request if email fails - notification is still created
+        console.error(`✗ Error sending email to admin ${adminId}:`, emailError);
+      }
     });
     
     await Promise.all(notificationPromises);
     
     console.log('Successfully created join request');
-    console.log('Notified', Object.keys(admins).length, 'admin(s)');
+    console.log('Notified', adminIds.length, 'admin(s) with notifications and emails');
     console.groupEnd();
     
     return { success: true, requestId: uid };
@@ -2050,9 +2160,13 @@ export const subscribeToNotifications = (uid, callback) => {
   onValue(notificationsRef, (snapshot) => {
     if (snapshot.exists()) {
       const notifications = snapshot.val();
-      const notificationsArray = Object.values(notifications).sort((a, b) => 
-        new Date(b.createdAt) - new Date(a.createdAt)
-      );
+      const notificationsArray = Object.values(notifications).sort((a, b) => {
+        // First, prioritize unread over read
+        if (!a.read && b.read) return -1;
+        if (a.read && !b.read) return 1;
+        // Then sort by date (newest first) within each group
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
       callback(notificationsArray);
     } else {
       callback([]);
@@ -2106,6 +2220,317 @@ export const getQuizzes = async () => {
     return { success: true, data: [] };
   } catch (error) {
     console.error('Error getting quizzes:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// ========== PENDING USER FUNCTIONS (Email Verification) ==========
+
+/**
+ * Create a pending user entry (before email verification)
+ * @param {string} email - User email
+ * @param {string} password - User password (will be stored, used when verifying)
+ * @param {string} username - Username
+ * @param {string} verificationCode - 6-digit OTP code
+ * @param {number} expiryTimestamp - Unix timestamp when OTP expires
+ * @returns {Promise<Object>} - { success, tempUserId, error }
+ */
+export const createPendingUser = async (email, password, username, verificationCode, expiryTimestamp) => {
+  try {
+    const timestamp = new Date().toISOString();
+    
+    // Create temporary user data
+    const tempUserId = push(ref(database, 'pending_users')).key;
+    const pendingUserRef = ref(database, `pending_users/${tempUserId}`);
+    
+    const pendingUserData = {
+      email,
+      password, // Store plain password temporarily (will be used when creating actual user)
+      username: username?.trim() || '',
+      verificationCode,
+      expiryTimestamp,
+      createdAt: timestamp,
+      wrongAttempts: 0,
+      lastAttemptAt: null,
+      lockedUntil: null
+    };
+    
+    await set(pendingUserRef, pendingUserData);
+    
+    return { success: true, tempUserId };
+  } catch (error) {
+    console.error('Error creating pending user:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Get pending user by tempUserId
+ * @param {string} tempUserId - Temporary user ID
+ * @returns {Promise<Object>} - { success, data, error }
+ */
+export const getPendingUser = async (tempUserId) => {
+  try {
+    const pendingUserRef = ref(database, `pending_users/${tempUserId}`);
+    const snapshot = await get(pendingUserRef);
+    
+    if (snapshot.exists()) {
+      return { success: true, data: snapshot.val() };
+    }
+    
+    return { success: false, error: 'Pending user not found' };
+  } catch (error) {
+    console.error('Error getting pending user:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Find pending user by email
+ * @param {string} email - User email
+ * @returns {Promise<Object>} - { success, data, tempUserId, error }
+ */
+export const findPendingUserByEmail = async (email) => {
+  try {
+    const pendingUsersRef = ref(database, 'pending_users');
+    const snapshot = await get(pendingUsersRef);
+    
+    if (snapshot.exists()) {
+      const pendingUsers = snapshot.val();
+      
+      // Find user by email
+      for (const [tempUserId, userData] of Object.entries(pendingUsers)) {
+        if (userData.email === email) {
+          return { success: true, data: userData, tempUserId };
+        }
+      }
+    }
+    
+    return { success: false, error: 'Pending user not found' };
+  } catch (error) {
+    console.error('Error finding pending user:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Verify OTP and check if pending user is locked or expired
+ * @param {string} tempUserId - Temporary user ID
+ * @param {string} otp - OTP code to verify
+ * @returns {Promise<Object>} - { success, valid, data, error }
+ */
+export const verifyPendingUserOTP = async (tempUserId, otp) => {
+  try {
+    const pendingUserRef = ref(database, `pending_users/${tempUserId}`);
+    const snapshot = await get(pendingUserRef);
+    
+    if (!snapshot.exists()) {
+      return { success: false, valid: false, error: 'Pending user not found' };
+    }
+    
+    const pendingUser = snapshot.val();
+    const now = Date.now();
+    
+    // Check if account is locked
+    if (pendingUser.lockedUntil && now < pendingUser.lockedUntil) {
+      const lockMinutes = Math.ceil((pendingUser.lockedUntil - now) / 60000);
+      return { 
+        success: false, 
+        valid: false, 
+        error: `Account locked. Try again in ${lockMinutes} minute(s).`,
+        locked: true
+      };
+    }
+    
+    // Check if OTP is expired
+    if (now > pendingUser.expiryTimestamp) {
+      return { 
+        success: false, 
+        valid: false, 
+        error: 'Verification code has expired. Please request a new one.',
+        expired: true
+      };
+    }
+    
+    // Verify OTP
+    if (pendingUser.verificationCode !== otp) {
+      // Increment wrong attempts
+      const wrongAttempts = (pendingUser.wrongAttempts || 0) + 1;
+      const updates = {
+        wrongAttempts,
+        lastAttemptAt: now
+      };
+      
+      // Lock account after 3 wrong attempts for 5 minutes
+      if (wrongAttempts >= 3) {
+        updates.lockedUntil = now + (5 * 60 * 1000); // 5 minutes
+        await update(pendingUserRef, updates);
+        return { 
+          success: false, 
+          valid: false, 
+          error: 'Too many wrong attempts. Account locked for 5 minutes.',
+          locked: true
+        };
+      }
+      
+      await update(pendingUserRef, updates);
+      const remainingAttempts = 3 - wrongAttempts;
+      return { 
+        success: false, 
+        valid: false, 
+        error: `Invalid code. ${remainingAttempts} attempt(s) remaining.`,
+        remainingAttempts
+      };
+    }
+    
+    // OTP is correct
+    return { success: true, valid: true, data: pendingUser };
+    
+  } catch (error) {
+    console.error('Error verifying OTP:', error);
+    return { success: false, valid: false, error: error.message };
+  }
+};
+
+/**
+ * Update OTP for pending user (resend)
+ * @param {string} tempUserId - Temporary user ID
+ * @param {string} newVerificationCode - New OTP code
+ * @param {number} newExpiryTimestamp - New expiry timestamp
+ * @returns {Promise<Object>} - { success, error }
+ */
+export const updatePendingUserOTP = async (tempUserId, newVerificationCode, newExpiryTimestamp) => {
+  try {
+    const pendingUserRef = ref(database, `pending_users/${tempUserId}`);
+    const snapshot = await get(pendingUserRef);
+    
+    if (!snapshot.exists()) {
+      return { success: false, error: 'Pending user not found' };
+    }
+    
+    await update(pendingUserRef, {
+      verificationCode: newVerificationCode,
+      expiryTimestamp: newExpiryTimestamp,
+      wrongAttempts: 0, // Reset wrong attempts
+      lockedUntil: null, // Remove lock
+      lastAttemptAt: null
+    });
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating pending user OTP:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Move verified user from pending_users to users and create Firebase Auth account
+ * @param {string} tempUserId - Temporary user ID
+ * @returns {Promise<Object>} - { success, user, userData, error }
+ */
+export const movePendingUserToVerified = async (tempUserId) => {
+  try {
+    const pendingUserRef = ref(database, `pending_users/${tempUserId}`);
+    const snapshot = await get(pendingUserRef);
+    
+    if (!snapshot.exists()) {
+      return { success: false, error: 'Pending user not found' };
+    }
+    
+    const pendingUser = snapshot.val();
+    
+    // Create Firebase Auth account
+    const userCredential = await createUserWithEmailAndPassword(
+      auth, 
+      pendingUser.email, 
+      pendingUser.password
+    );
+    const user = userCredential.user;
+    const timestamp = new Date().toISOString();
+    const sanitizedUsername = pendingUser.username?.trim() || '';
+    
+    // Create user entry in Realtime Database
+    const userRef = ref(database, `users/${user.uid}`);
+    await set(userRef, {
+      uid: user.uid,
+      email: pendingUser.email,
+      username: sanitizedUsername,
+      displayName: sanitizedUsername,
+      followerCount: 0,
+      followingCount: 0,
+      createdAt: timestamp,
+      authProvider: 'password',
+      auth: {
+        providers: ['password'],
+        emailVerified: true,
+        lastVerificationCheck: timestamp
+      },
+      preferences: {
+        theme: 'system',
+        language: 'en',
+        region: 'global'
+      },
+      account: {
+        status: 'active',
+        deletionRequestedAt: null
+      }
+    });
+    
+    // Create username index for fast lookup
+    if (sanitizedUsername) {
+      const usernameIndexRef = ref(database, `usernames/${sanitizedUsername}`);
+      await set(usernameIndexRef, user.uid);
+    }
+    
+    // Create empty profile with firstLoginCompleted: false
+    const profileRef = ref(database, `users/${user.uid}/profile`);
+    await set(profileRef, {
+      username: sanitizedUsername,
+      displayName: sanitizedUsername,
+      firstName: '',
+      bio: '',
+      description: '',
+      interests: [],
+      profilePic: '',
+      bannerPic: '',
+      firstLoginCompleted: false,
+      updatedAt: timestamp
+    });
+    
+    // Delete pending user entry
+    await remove(pendingUserRef);
+    
+    // Fetch user data
+    const userSnapshot = await get(userRef);
+    const profileSnapshot = await get(profileRef);
+    
+    let userData = null;
+    if (userSnapshot.exists()) {
+      userData = userSnapshot.val();
+      if (profileSnapshot.exists()) {
+        userData.profile = profileSnapshot.val();
+      }
+    }
+    
+    return { success: true, user, userData };
+  } catch (error) {
+    console.error('Error moving pending user to verified:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Delete pending user (cleanup)
+ * @param {string} tempUserId - Temporary user ID
+ * @returns {Promise<Object>} - { success, error }
+ */
+export const deletePendingUser = async (tempUserId) => {
+  try {
+    const pendingUserRef = ref(database, `pending_users/${tempUserId}`);
+    await remove(pendingUserRef);
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting pending user:', error);
     return { success: false, error: error.message };
   }
 };

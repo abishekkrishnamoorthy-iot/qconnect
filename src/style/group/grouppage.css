@@ -268,7 +268,7 @@
   color: #666;
 }
 
-/* Trending Groups in Group Page */
+/* Trending Groups in Group Page - Matching Home Page Style */
 .group-page-container .trending-groups {
   display: flex;
   flex-direction: column;
@@ -276,15 +276,49 @@
   max-width: 300px;
   min-width: 0;
   flex-shrink: 0;
-  height: fit-content;
-  max-height: 85vh;
+  height: calc(85vh - 40px); /* Fixed height matching container height minus padding */
+  max-height: calc(85vh - 40px);
   background-color: #F9F0DB;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden; /* Container doesn't scroll, only list does */
   position: sticky;
   top: 20px;
+}
+
+/* Trending header - sticky within container */
+.group-page-container .trending-groups .trending-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background-color: #F9F0DB;
+  border-radius: 12px 12px 0 0;
+  color: #463804;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.group-page-container .trending-groups .trending-header h1 {
+  font-size: 17px;
+  margin: 0;
+  font-weight: 600;
+}
+
+/* Trending list - scrollable content */
+.group-page-container .trending-groups .trending-list {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+  min-height: 0; /* Allow flex child to shrink */
   /* Hide scrollbar for Firefox */
   scrollbar-width: none;
   /* Hide scrollbar for IE and Edge */
@@ -292,7 +326,7 @@
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
-.group-page-container .trending-groups::-webkit-scrollbar {
+.group-page-container .trending-groups .trending-list::-webkit-scrollbar {
   display: none;
 }
 

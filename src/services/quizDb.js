@@ -1,5 +1,8 @@
 import { ref, get, set, query, orderByChild } from 'firebase/database'
 import { database } from '../firebase/config'
+import { createNotification } from './db'
+import { getPost, getUser } from './db'
+import { sendNotificationEmail } from '../utils/notificationEmailService'
 
 /**
  * Check if user has already completed a quiz
@@ -32,6 +35,72 @@ export const saveQuizResult = async (postId, uid, resultData) => {
       correctCount: resultData.correctCount,
       finishedAt: resultData.finishedAt || Date.now()
     })
+    
+    // Create notification for quiz owner
+    try {
+      // Get quiz post to find the quiz creator
+      const postResult = await getPost(postId)
+      if (postResult.success && postResult.data) {
+        const quizPost = postResult.data
+        const quizOwnerId = quizPost.userId || quizPost.createdBy
+        
+        // Only create notification if quiz taker is not the quiz owner
+        if (quizOwnerId && quizOwnerId !== uid) {
+          // Get quiz taker user data
+          const takerResult = await getUser(uid)
+          const takerUsername = takerResult.success 
+            ? (takerResult.data.profile?.username || takerResult.data.username || 'Someone')
+            : 'Someone'
+          
+          const quizPercentage = Math.round(resultData.score || 0)
+          const message = `${takerUsername} completed your quiz with a score of ${quizPercentage}%`
+          
+          // Create in-app notification
+          await createNotification(quizOwnerId, {
+            type: 'quiz_complete',
+            fromUserId: uid, // Quiz taker
+            postId: postId,
+            quizPercentage: quizPercentage,
+            message: message,
+            read: false
+          })
+          
+          // Send email notification
+          try {
+            const ownerResult = await getUser(quizOwnerId)
+            if (ownerResult.success) {
+              const ownerUser = ownerResult.data
+              const ownerEmail = ownerUser.email
+              
+              if (ownerEmail && ownerEmail.includes('@')) {
+                const emailResult = await sendNotificationEmail(ownerEmail, {
+                  type: 'quiz_complete',
+                  memberName: takerUsername,
+                  quizPercentage: quizPercentage,
+                  postTitle: quizPost.title || 'Quiz',
+                  actionLink: typeof window !== 'undefined' ? `${window.location.origin}/home/${postId}` : `https://qconnect.com/home/${postId}`
+                })
+                
+                if (emailResult.success) {
+                  console.log(`✓ Quiz completion email sent to quiz owner: ${ownerEmail}`)
+                } else {
+                  console.warn(`⚠ Failed to send quiz completion email: ${emailResult.error}`)
+                }
+              }
+            }
+          } catch (emailError) {
+            // Don't fail if email fails
+            console.error('Error sending quiz completion email:', emailError)
+          }
+          
+          console.log(`✓ Created quiz_complete notification for quiz owner: ${quizOwnerId}`)
+        }
+      }
+    } catch (notifError) {
+      // Don't block quiz result save if notification fails
+      console.error('Error creating quiz_complete notification:', notifError)
+    }
+    
     return { success: true }
   } catch (error) {
     console.error('Error saving quiz result:', error)

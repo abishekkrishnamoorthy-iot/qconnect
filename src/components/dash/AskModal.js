@@ -389,7 +389,8 @@ const AskModal = ({ onClose, onPostCreated, cudetails }) => {
           const url = await uploadToCloudinary(file);
           
           // Validate URL format
-          if (!url || !url.startsWith('https://res.cloudinary.com/dfayzbhpu/')) {
+          const cloudName = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || 'dfayzbhpu';
+          if (!url || !url.startsWith(`https://res.cloudinary.com/${cloudName}/`)) {
             throw new Error(`Invalid Cloudinary URL: ${url}`);
           }
           
