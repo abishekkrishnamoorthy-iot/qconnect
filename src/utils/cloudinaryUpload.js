@@ -32,7 +32,6 @@ export async function uploadToCloudinary(file, retryAttempt = 0) {
   console.log("Preset:", upload_preset);
   console.log("Cloud:", cloud_name);
   console.log("Endpoint:", endpoint);
-  console.log("Using env vars:", usingEnvVars);
   console.log("Attempt:", retryAttempt + 1);
 
   try {
